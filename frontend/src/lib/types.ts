@@ -76,6 +76,57 @@ export interface Product {
   averageRating?: number;
 }
 
+export interface WishlistItem {
+  id: string;
+  userId: string;
+  productId: string;
+  product: Product;
+  createdAt: string;
+}
+
+export type AddressType = 'SHIPPING' | 'BILLING' | 'HOME' | 'WORK';
+
+export interface Address {
+  id: string;
+  userId: string;
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  addressType: AddressType;
+  isDefault: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type DiscountType = 'PERCENTAGE' | 'FIXED';
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discountType: DiscountType;
+  discountValue: number;
+  minOrderAmount?: number;
+  maxDiscountAmount?: number;
+  startDate?: string;
+  expirationDate?: string;
+  usageLimit?: number;
+  userUsageLimit: number;
+  usedCount: number;
+  isActive: boolean;
+}
+
+export interface CouponValidationResult {
+  valid: boolean;
+  coupon: Coupon;
+  discountAmount: number;
+  message?: string;
+}
+
 export interface CartItem {
   id: string;
   productId: string;
@@ -83,6 +134,7 @@ export interface CartItem {
   quantity: number;
   variantId?: string;
   variant?: ProductVariant;
+  priceSnapshot?: number;
 }
 
 export interface Cart {

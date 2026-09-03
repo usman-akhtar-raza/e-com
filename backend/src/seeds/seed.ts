@@ -7,8 +7,12 @@ import { Brand } from '../brands/entities/brand.entity';
 import { Product } from '../products/entities/product.entity';
 import { ProductVariant } from '../products/entities/product-variant.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
+import { Address } from '../addresses/entities/address.entity';
+import { Coupon } from '../coupons/entities/coupon.entity';
 import { Role } from '../common/enums/role.enum';
 import { ProductStatus } from '../common/enums/product-status.enum';
+import { DiscountType } from '../common/enums/discount-type.enum';
+import { AddressType } from '../common/enums/address-type.enum';
 
 dotenv.config();
 
@@ -19,7 +23,7 @@ const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'ecom',
-  entities: [User, Category, Brand, Product, ProductVariant, Inventory, __dirname + '/../**/*.entity{.ts,.js}'],
+  entities: [User, Category, Brand, Product, ProductVariant, Inventory, Address, Coupon, __dirname + '/../**/*.entity{.ts,.js}'],
   synchronize: true,
 });
 
@@ -37,8 +41,9 @@ async function runSeed() {
     const categoryRepo = queryRunner.manager.getRepository(Category);
     const brandRepo = queryRunner.manager.getRepository(Brand);
     const productRepo = queryRunner.manager.getRepository(Product);
-    const variantRepo = queryRunner.manager.getRepository(ProductVariant);
     const inventoryRepo = queryRunner.manager.getRepository(Inventory);
+    const addressRepo = queryRunner.manager.getRepository(Address);
+    const couponRepo = queryRunner.manager.getRepository(Coupon);
 
     // 1. Admin & Customer Users
     const adminEmail = 'admin@example.com';
@@ -69,7 +74,58 @@ async function runSeed() {
       console.log('Customer user created');
     }
 
-    // 2. Categories
+    // 2. Customer Address
+    if (customer) {
+      let addr = await addressRepo.findOne({ where: { userId: customer.id } });
+      if (!addr) {
+        addr = addressRepo.create({
+          userId: customer.id,
+          fullName: 'Customer User',
+          phone: '+1234567890',
+          addressLine1: '123 Main Street',
+          city: 'New York',
+          state: 'NY',
+          postalCode: '10001',
+          country: 'USA',
+          addressType: AddressType.SHIPPING,
+          isDefault: true,
+        });
+        await addressRepo.save(addr);
+        console.log('Customer address seeded');
+      }
+    }
+
+    // 3. Coupons
+    const couponsData = [
+      {
+        code: 'SAVE10',
+        discountType: DiscountType.PERCENTAGE,
+        discountValue: 10,
+        minOrderAmount: 50,
+        maxDiscountAmount: 100,
+        userUsageLimit: 5,
+        isActive: true,
+      },
+      {
+        code: 'FLAT50',
+        discountType: DiscountType.FIXED,
+        discountValue: 50,
+        minOrderAmount: 200,
+        userUsageLimit: 1,
+        isActive: true,
+      },
+    ];
+
+    for (const cData of couponsData) {
+      let coupon = await couponRepo.findOne({ where: { code: cData.code } });
+      if (!coupon) {
+        coupon = couponRepo.create(cData);
+        await couponRepo.save(coupon);
+      }
+    }
+    console.log('Coupons seeded');
+
+    // 4. Categories
     const categoriesData = [
       { name: 'Electronics', slug: 'electronics' },
       { name: 'Clothing', slug: 'clothing' },
@@ -89,7 +145,7 @@ async function runSeed() {
     }
     console.log('Categories seeded');
 
-    // 3. Brands
+    // 5. Brands
     const brandsData = [
       { name: 'Apple', slug: 'apple', description: 'Innovative tech brand' },
       { name: 'Nike', slug: 'nike', description: 'Athletic footwear & apparel' },
@@ -109,7 +165,7 @@ async function runSeed() {
     }
     console.log('Brands seeded');
 
-    // 4. Products
+    // 6. Products
     const productsData = [
       { name: 'Smartphone X', slug: 'smartphone-x', price: 999.99, stock: 50, sku: 'SPX-001', description: 'Latest smartphone with OLED display', categoryId: savedCategories[0].id, brandId: savedBrands[0].id, status: ProductStatus.ACTIVE },
       { name: 'Laptop Pro', slug: 'laptop-pro', price: 1499.99, stock: 30, sku: 'LTP-001', description: 'High performance laptop with M-series chip', categoryId: savedCategories[0].id, brandId: savedBrands[0].id, status: ProductStatus.ACTIVE },
@@ -130,7 +186,6 @@ async function runSeed() {
         await productRepo.save(prod);
       }
 
-      // Seed Inventory record for each product
       let inv = await inventoryRepo.findOne({ where: { productId: prod.id } });
       if (!inv) {
         inv = inventoryRepo.create({

@@ -1,6 +1,6 @@
-import { ApiResponse, PaginatedResponse, Product, Category, Brand, Cart, Order, Review, User } from './types';
+import { ApiResponse, PaginatedResponse, Product, Category, Brand, Cart, Order, Review, User, WishlistItem, Address, Coupon, CouponValidationResult } from './types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
 
 class ApiClient {
   private token: string | null = null;
@@ -113,9 +113,32 @@ export const api = {
   },
   cart: {
     get: () => client.get<Cart>('/cart'),
-    addItem: (productId: string, quantity: number = 1) => client.post<Cart>('/cart/items', { productId, quantity }),
+    addItem: (productId: string, quantity: number = 1, variantId?: string) => client.post<Cart>('/cart/items', { productId, quantity, variantId }),
     updateItem: (id: string, quantity: number) => client.patch<Cart>(`/cart/items/${id}`, { quantity }),
     removeItem: (id: string) => client.delete<Cart>(`/cart/items/${id}`),
+    clear: () => client.delete<void>('/cart'),
+  },
+  wishlist: {
+    get: () => client.get<WishlistItem[]>('/wishlist'),
+    checkStatus: (productId: string) => client.get<boolean>(`/wishlist/check/${productId}`),
+    addItem: (productId: string) => client.post<WishlistItem>('/wishlist', { productId }),
+    removeItem: (productId: string) => client.delete<void>(`/wishlist/${productId}`),
+  },
+  addresses: {
+    getAll: () => client.get<Address[]>('/addresses'),
+    getById: (id: string) => client.get<Address>(`/addresses/${id}`),
+    create: (body: any) => client.post<Address>('/addresses', body),
+    update: (id: string, body: any) => client.patch<Address>(`/addresses/${id}`, body),
+    setDefault: (id: string) => client.patch<Address>(`/addresses/${id}/default`, {}),
+    delete: (id: string) => client.delete<void>(`/addresses/${id}`),
+  },
+  coupons: {
+    validate: (code: string, orderAmount: number) => client.post<CouponValidationResult>('/coupons/validate', { code, orderAmount }),
+    getAll: () => client.get<Coupon[]>('/coupons'),
+    getById: (id: string) => client.get<Coupon>(`/coupons/${id}`),
+    create: (body: any) => client.post<Coupon>('/coupons', body),
+    update: (id: string, body: any) => client.patch<Coupon>(`/coupons/${id}`, body),
+    delete: (id: string) => client.delete<void>(`/coupons/${id}`),
   },
   orders: {
     create: (shippingAddress: any) => client.post<Order>('/orders', { shippingAddress }),
