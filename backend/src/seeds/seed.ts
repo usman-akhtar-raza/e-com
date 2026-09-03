@@ -33,7 +33,7 @@ async function runSeed() {
     const categoryRepo = queryRunner.manager.getRepository(Category);
     const productRepo = queryRunner.manager.getRepository(Product);
 
-    // 1. Admin User
+    // 1. Admin & Customer Users
     const adminEmail = 'admin@example.com';
     let admin = await userRepo.findOne({ where: { email: adminEmail } });
     if (!admin) {
@@ -46,6 +46,20 @@ async function runSeed() {
       });
       await userRepo.save(admin);
       console.log('Admin user created');
+    }
+
+    const customerEmail = 'customer@example.com';
+    let customer = await userRepo.findOne({ where: { email: customerEmail } });
+    if (!customer) {
+      customer = userRepo.create({
+        email: customerEmail,
+        password: await bcrypt.hash('customer123', 10),
+        firstName: 'Customer',
+        lastName: 'User',
+        role: Role.CUSTOMER
+      });
+      await userRepo.save(customer);
+      console.log('Customer user created');
     }
 
     // 2. Categories

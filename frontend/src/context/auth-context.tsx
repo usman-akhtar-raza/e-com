@@ -38,9 +38,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = async (data: any) => {
-    const res = await api.auth.login(data);
-    api.client.setToken(res.accessToken);
-    setToken(res.accessToken);
+    const res: any = await api.auth.login(data);
+    const token = res?.access_token || res?.accessToken;
+    if (token) {
+      api.client.setToken(token);
+      setToken(token);
+    }
     const profile = await api.auth.getProfile();
     setUser(profile);
   };

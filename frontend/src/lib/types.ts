@@ -4,7 +4,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'USER' | 'ADMIN';
+  role: 'CUSTOMER' | 'ADMIN';
 }
 
 export interface Category {

@@ -47,6 +47,10 @@ class ApiClient {
       throw new Error(data.message || data.error || 'API Error');
     }
 
+    if (data && typeof data === 'object' && data.success === true && 'data' in data) {
+      return data.data;
+    }
+
     return data;
   }
 
