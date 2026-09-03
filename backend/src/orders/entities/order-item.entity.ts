@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Order } from './order.entity';
 import { Product } from '../../products/entities/product.entity';
+import { ProductVariant } from '../../products/entities/product-variant.entity';
 
 @Entity('order_items')
 export class OrderItem {
@@ -17,13 +18,32 @@ export class OrderItem {
   @Column()
   productId: string;
 
-  @ManyToOne(() => Product)
+  @ManyToOne(() => Product, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'productId' })
   product: Product;
+
+  @Column({ nullable: true })
+  variantId?: string;
+
+  @ManyToOne(() => ProductVariant, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'variantId' })
+  variant?: ProductVariant;
+
+  @Column()
+  productName: string;
+
+  @Column({ nullable: true })
+  variantName?: string;
 
   @Column({ type: 'int' })
   quantity: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
+  unitPrice: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  totalPrice: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  price: number; // legacy backward compatibility alias
 }
