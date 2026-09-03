@@ -51,7 +51,7 @@ function ProductsContent() {
     setLoading(true);
     try {
       const params: any = {
-        limit: 20,
+        limit: 24,
         sortBy,
         sortOrder,
       };
@@ -82,34 +82,37 @@ function ProductsContent() {
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
-      {/* Sidebar Filter Panel */}
-      <aside className="w-full lg:w-64 flex-shrink-0 space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
-        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-          <h2 className="text-lg font-bold text-gray-900">Filters</h2>
-          <button onClick={handleResetFilters} className="text-xs text-blue-600 font-semibold hover:underline">
+      {/* Glass Sidebar Filter Panel */}
+      <aside className="w-full lg:w-72 flex-shrink-0 space-y-6 bg-white/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/80 shadow-sm h-fit">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <h2 className="text-base font-extrabold text-slate-900 flex items-center space-x-2">
+            <span>⚙️</span>
+            <span>Catalog Filters</span>
+          </h2>
+          <button onClick={handleResetFilters} className="text-xs text-blue-600 font-bold hover:underline">
             Reset All
           </button>
         </div>
 
         {/* Search */}
         <div>
-          <label className="block text-xs font-semibold text-gray-700 uppercase mb-2">Keyword Search</label>
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Search Catalog</label>
           <input
             type="text"
             placeholder="Product name or SKU..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
           />
         </div>
 
         {/* Categories */}
         <div>
-          <label className="block text-xs font-semibold text-gray-700 uppercase mb-2">Category</label>
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Category</label>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
           >
             <option value="">All Categories</option>
             {categories.map((c) => (
@@ -120,11 +123,11 @@ function ProductsContent() {
 
         {/* Brands */}
         <div>
-          <label className="block text-xs font-semibold text-gray-700 uppercase mb-2">Brand</label>
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Brand</label>
           <select
             value={selectedBrand}
             onChange={(e) => setSelectedBrand(e.target.value)}
-            className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
           >
             <option value="">All Brands</option>
             {brands.map((b) => (
@@ -135,28 +138,28 @@ function ProductsContent() {
 
         {/* Price Range */}
         <div>
-          <label className="block text-xs font-semibold text-gray-700 uppercase mb-2">Price Range ($)</label>
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Price Filter ($)</label>
           <div className="grid grid-cols-2 gap-2">
             <input
               type="number"
-              placeholder="Min"
+              placeholder="Min ($)"
               value={minPrice}
               onChange={(e) => setMinPrice(e.target.value)}
-              className="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border border-slate-200 rounded-xl p-2 text-xs font-medium focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
             />
             <input
               type="number"
-              placeholder="Max"
+              placeholder="Max ($)"
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full border border-slate-200 rounded-xl p-2 text-xs font-medium focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
             />
           </div>
         </div>
 
         {/* Sorting */}
         <div>
-          <label className="block text-xs font-semibold text-gray-700 uppercase mb-2">Sort By</label>
+          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Sort Ordering</label>
           <select
             value={`${sortBy}:${sortOrder}`}
             onChange={(e) => {
@@ -164,31 +167,36 @@ function ProductsContent() {
               setSortBy(sb);
               setSortOrder(so as 'ASC' | 'DESC');
             }}
-            className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
           >
-            <option value="createdAt:DESC">Newest First</option>
+            <option value="createdAt:DESC">Newest Arrivals</option>
             <option value="price:ASC">Price: Low to High</option>
             <option value="price:DESC">Price: High to Low</option>
-            <option value="name:ASC">Name: A to Z</option>
+            <option value="name:ASC">Product Name: A-Z</option>
           </select>
         </div>
       </aside>
 
-      {/* Product Catalog Grid */}
+      {/* Main Products Grid */}
       <main className="flex-1 space-y-6">
-        <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">
-            Showing <span className="font-bold text-gray-900">{products.length}</span> products
+        <div className="flex items-center justify-between bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Displaying <span className="text-blue-600 font-black">{products.length}</span> Verified Products
           </p>
         </div>
 
         {loading ? (
           <LoadingSpinner />
         ) : products.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
-            <p className="text-gray-500 text-lg mb-2">No products match your search criteria.</p>
-            <button onClick={handleResetFilters} className="text-blue-600 font-semibold hover:underline">
-              Clear filters and try again
+          <div className="bg-white rounded-3xl p-16 text-center border border-slate-200/80 shadow-sm space-y-4">
+            <div className="text-4xl">🔍</div>
+            <h3 className="text-xl font-extrabold text-slate-900">No Matching Products Found</h3>
+            <p className="text-slate-500 text-sm max-w-sm mx-auto">Try clearing active search filters or selecting another category.</p>
+            <button
+              onClick={handleResetFilters}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-full text-xs hover:shadow-lg transition"
+            >
+              Reset Filters
             </button>
           </div>
         ) : (
@@ -205,7 +213,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <Suspense fallback={<LoadingSpinner />}>
         <ProductsContent />
       </Suspense>

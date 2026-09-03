@@ -2,16 +2,31 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { api } from '@/lib/api';
 
 export function Navbar() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    function handleScroll() {
+      if (window.scrollY > 10) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    }
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -31,7 +46,7 @@ export function Navbar() {
       setCartCount(0);
       setWishlistCount(0);
     }
-  }, [user]);
+  }, [user, pathname]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -40,54 +55,99 @@ export function Navbar() {
     }
   }
 
+  const navLinks = [
+    { name: 'Home', href: '/' },
+    { name: 'Products', href: '/products' },
+    { name: 'Categories', href: '/categories' },
+  ];
+
   return (
-    <nav className="sticky top-0 bg-white shadow-sm border-b border-gray-100 z-50">
+    <nav
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? 'bg-white/85 backdrop-blur-xl border-b border-slate-200/80 shadow-sm py-2'
+          : 'bg-white/95 backdrop-blur-md border-b border-slate-100 py-3'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center space-x-4">
-          <Link href="/" className="font-extrabold text-2xl text-blue-600 tracking-tight flex-shrink-0">
-            ShopHub
+        <div className="flex items-center justify-between h-12">
+          {/* Brand Logo */}
+          <Link href="/" className="flex items-center space-x-2 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition duration-300">
+              <span className="text-white font-black text-xl">S</span>
+            </div>
+            <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-700 bg-clip-text text-transparent">
+              ShopHub
+            </span>
           </Link>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-md hidden sm:flex">
-            <div className="relative w-full">
+          <form onSubmit={handleSearch} className="flex-1 max-w-md mx-6 hidden md:block">
+            <div className="relative">
               <input
                 type="text"
-                placeholder="Search products, brands, categories..."
+                placeholder="Search products, categories, brands..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-4 pr-10 py-2 border border-gray-200 rounded-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-gray-50/50"
+                className="w-full pl-10 pr-12 py-2 bg-slate-100/80 hover:bg-slate-100 focus:bg-white border border-slate-200/80 rounded-full text-sm font-medium transition duration-200 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none text-slate-800 placeholder-slate-400"
               />
-              <button type="submit" className="absolute right-3 top-2.5 text-gray-400 hover:text-blue-600">
+              <span className="absolute left-3.5 top-2.5 text-slate-400 text-sm">
                 🔍
+              </span>
+              <button
+                type="submit"
+                className="absolute right-1.5 top-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full px-3 py-1 text-xs font-semibold hover:opacity-90 transition shadow-sm"
+              >
+                Go
               </button>
             </div>
           </form>
 
-          {/* Nav Links */}
-          <div className="hidden md:flex space-x-6 text-sm font-medium">
-            <Link href="/" className="text-gray-700 hover:text-blue-600 transition">Home</Link>
-            <Link href="/products" className="text-gray-700 hover:text-blue-600 transition">Products</Link>
-            <Link href="/categories" className="text-gray-700 hover:text-blue-600 transition">Categories</Link>
+          {/* Navigation Links */}
+          <div className="hidden lg:flex items-center space-x-1 text-sm font-semibold">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`px-4 py-2 rounded-full transition duration-200 ${
+                    isActive
+                      ? 'bg-slate-100 text-blue-600 font-bold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
           </div>
 
-          {/* Right Action Icons */}
-          <div className="flex items-center space-x-4">
+          {/* Action Icons */}
+          <div className="flex items-center space-x-3">
             {user && (
-              <Link href="/account/wishlist" className="text-gray-700 hover:text-blue-600 relative p-1 transition" title="Wishlist">
+              <Link
+                href="/account/wishlist"
+                className="p-2.5 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-full relative transition duration-200"
+                title="Saved Wishlist"
+              >
                 <span className="text-xl">❤️</span>
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[10px] font-black rounded-full h-4 w-4 flex items-center justify-center animate-pulse-glow shadow-sm">
                     {wishlistCount}
                   </span>
                 )}
               </Link>
             )}
 
-            <Link href="/cart" className="text-gray-700 hover:text-blue-600 relative p-1 transition" title="Shopping Cart">
+            <Link
+              href="/cart"
+              className="p-2.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-full relative transition duration-200"
+              title="Shopping Cart"
+            >
               <span className="text-xl">🛒</span>
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center shadow-md shadow-blue-500/30">
                   {cartCount}
                 </span>
               )}
@@ -95,25 +155,55 @@ export function Navbar() {
 
             {user ? (
               <div className="relative group">
-                <button className="flex items-center space-x-1.5 text-gray-700 hover:text-blue-600 font-semibold text-sm">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
+                <button className="flex items-center space-x-2 pl-2 pr-3 py-1.5 rounded-full border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 transition duration-200">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
                     {user.firstName[0]}
                   </div>
-                  <span className="hidden sm:inline">{user.firstName}</span>
+                  <span className="text-xs font-bold text-slate-800 hidden sm:inline">{user.firstName}</span>
+                  <span className="text-[10px] text-slate-400">▼</span>
                 </button>
-                <div className="absolute right-0 w-48 mt-2 py-2 bg-white border border-gray-100 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium">Account Overview</Link>
-                  <Link href="/account/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Orders</Link>
-                  <Link href="/account/wishlist" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Saved Wishlist</Link>
-                  <Link href="/account/addresses" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Address Book</Link>
+
+                {/* Dropdown Menu */}
+                <div className="absolute right-0 w-52 mt-2 py-2 bg-white/95 backdrop-blur-xl border border-slate-100 rounded-2xl shadow-xl shadow-slate-200/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="px-4 py-2 border-b border-slate-100">
+                    <p className="text-xs font-bold text-slate-900">{user.firstName} {user.lastName}</p>
+                    <p className="text-[11px] text-slate-400 font-mono truncate">{user.email}</p>
+                  </div>
+                  <Link href="/account" className="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition">
+                    Dashboard Overview
+                  </Link>
+                  <Link href="/account/orders" className="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition">
+                    My Orders
+                  </Link>
+                  <Link href="/account/wishlist" className="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition">
+                    Saved Wishlist
+                  </Link>
+                  <Link href="/account/addresses" className="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition">
+                    Address Book
+                  </Link>
+
                   {user.role === 'ADMIN' && (
-                    <Link href="/admin" className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-semibold border-t border-gray-100 mt-1">Admin Portal</Link>
+                    <Link
+                      href="/admin"
+                      className="block px-4 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 border-t border-slate-100 mt-1 transition"
+                    >
+                      ⚡ Admin Portal
+                    </Link>
                   )}
-                  <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-gray-100 font-medium">Logout</button>
+
+                  <button
+                    onClick={logout}
+                    className="block w-full text-left px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 border-t border-slate-100 mt-1 transition"
+                  >
+                    Logout
+                  </button>
                 </div>
               </div>
             ) : (
-              <Link href="/login" className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-blue-700 transition">
+              <Link
+                href="/login"
+                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white px-5 py-2 rounded-full text-xs font-bold hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 transition duration-200"
+              >
                 Sign In
               </Link>
             )}
