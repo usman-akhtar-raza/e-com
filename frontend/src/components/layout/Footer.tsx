@@ -1,103 +1,98 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { ArrowIcon } from '@/components/ui/Icons';
 
 export function Footer() {
+  const pathname = usePathname();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
-  function handleSubscribe(e: React.FormEvent) {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail('');
-    }
+  function handleSubscribe(event: React.FormEvent) {
+    event.preventDefault();
+    if (!email.trim()) return;
+    setSubscribed(true);
+    setEmail('');
   }
 
+  if (pathname.startsWith('/admin')) return null;
+
   return (
-    <footer className="bg-slate-950 text-slate-400 mt-auto border-t border-slate-900">
-      <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          {/* Brand Col */}
-          <div className="space-y-4">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center">
-                <span className="text-white font-black text-lg">S</span>
-              </div>
-              <span className="font-extrabold text-xl text-white tracking-tight">ShopHub</span>
-            </Link>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Your premier e-commerce platform delivering authentic quality products, fast shipping, and 100% verified customer ratings.
-            </p>
-            <div className="flex space-x-3 text-lg">
-              <span className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-slate-300 hover:text-white hover:bg-blue-600 transition cursor-pointer">🌐</span>
-              <span className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-slate-300 hover:text-white hover:bg-blue-600 transition cursor-pointer">📦</span>
-              <span className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-slate-300 hover:text-white hover:bg-blue-600 transition cursor-pointer">🔒</span>
-            </div>
-          </div>
-
-          {/* Quick Links */}
+    <footer className="mt-auto bg-[#11120f] text-[#f4f1ea]">
+      <div className="mx-auto max-w-[1440px] px-5 py-16 sm:px-7 lg:px-10 lg:py-20">
+        <div className="grid gap-14 border-b border-white/12 pb-16 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div>
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Quick Navigation</h4>
-            <ul className="space-y-2.5 text-xs">
-              <li><Link href="/products" className="hover:text-blue-400 transition">Catalog Store</Link></li>
-              <li><Link href="/categories" className="hover:text-blue-400 transition">Featured Categories</Link></li>
-              <li><Link href="/cart" className="hover:text-blue-400 transition">My Shopping Cart</Link></li>
-              <li><Link href="/account/orders" className="hover:text-blue-400 transition">Track Orders</Link></li>
-            </ul>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b69b63]">A better kind of inbox</p>
+            <h2 className="mt-5 max-w-3xl font-display text-[clamp(2.8rem,5vw,5.5rem)] leading-[0.9] tracking-[-0.05em]">
+              New finds, good stories,<br /><em className="font-normal text-[#cdb785]">less noise.</em>
+            </h2>
           </div>
 
-          {/* Customer Service */}
-          <div>
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Customer Support</h4>
-            <ul className="space-y-2.5 text-xs">
-              <li><span className="text-slate-400">Help Center & FAQ</span></li>
-              <li><span className="text-slate-400">Shipping & Return Policies</span></li>
-              <li><span className="text-slate-400">Privacy Policy & Terms</span></li>
-              <li><span className="text-slate-400">Verified Seller Reviews</span></li>
-            </ul>
-          </div>
-
-          {/* Newsletter Form */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-2">Subscribe for Updates</h4>
-            <p className="text-xs text-slate-400">Get exclusive promotional codes like <span className="font-mono text-blue-400 font-bold">SAVE10</span> delivered to your inbox.</p>
+          <div className="max-w-xl lg:justify-self-end">
+            <p className="mb-5 text-sm leading-6 text-white/55">Join our edit for new arrivals, considered recommendations and occasional offers worth opening.</p>
             {subscribed ? (
-              <div className="p-3 bg-emerald-950/60 border border-emerald-800 rounded-xl text-emerald-300 text-xs font-semibold">
-                ✓ Thank you for subscribing!
-              </div>
+              <div className="rounded-2xl border border-[#b69b63]/40 bg-[#b69b63]/10 px-5 py-4 text-sm font-semibold text-[#d8c28f]">You’re on the list. Welcome to ShopHub.</div>
             ) : (
-              <form onSubmit={handleSubscribe} className="flex">
+              <form onSubmit={handleSubscribe} className="flex gap-2 border-b border-white/40 pb-2 transition focus-within:border-[#b69b63]">
+                <label className="sr-only" htmlFor="footer-email">Email address</label>
                 <input
+                  id="footer-email"
                   type="email"
                   required
-                  placeholder="Enter email address"
+                  placeholder="Your email address"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-l-xl text-xs text-white focus:outline-none focus:border-blue-500"
+                  onChange={(event) => setEmail(event.target.value)}
+                  className="min-w-0 flex-1 bg-transparent py-3 text-sm text-white outline-none placeholder:text-white/35"
                 />
-                <button
-                  type="submit"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-4 py-2.5 rounded-r-xl hover:opacity-90 transition"
-                >
-                  Join
+                <button type="submit" className="flex h-11 items-center gap-2 rounded-full bg-[#f4f1ea] px-5 text-sm font-bold text-[#11120f] transition hover:bg-[#b69b63]">
+                  Subscribe <ArrowIcon className="h-4 w-4" />
                 </button>
               </form>
             )}
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>&copy; {new Date().getFullYear()} ShopHub Inc. All rights reserved.</p>
-          <div className="flex items-center space-x-3 text-slate-400 font-mono text-[11px]">
-            <span className="bg-slate-900 px-2 py-1 rounded">VISA</span>
-            <span className="bg-slate-900 px-2 py-1 rounded">MASTERCARD</span>
-            <span className="bg-slate-900 px-2 py-1 rounded">AMEX</span>
-            <span className="bg-slate-900 px-2 py-1 rounded">COD</span>
+        <div className="grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
+          <div className="max-w-xs">
+            <Link href="/" className="flex items-center gap-2.5" aria-label="ShopHub home">
+              <span className="grid h-10 w-10 place-items-center rounded-full border border-[#b69b63]/60 bg-[#11120f] font-display text-xl font-bold italic text-[#cdb785]">S</span>
+              <span className="text-2xl font-black tracking-[-0.045em]">SHOPHUB</span>
+            </Link>
+            <p className="mt-5 text-sm leading-6 text-white/50">Everyday objects with exceptional form, function and staying power.</p>
           </div>
+
+          <FooterColumn title="Discover" links={[
+            ['New arrivals', '/products'], ['All products', '/products'], ['Collections', '/categories'], ['Your wishlist', '/account/wishlist'],
+          ]} />
+          <FooterColumn title="Customer care" links={[
+            ['My orders', '/account/orders'], ['Shopping bag', '/cart'], ['My account', '/account'], ['Sign in', '/login'],
+          ]} />
+          <div>
+            <h3 className="footer-heading">Our standards</h3>
+            <ul className="space-y-3 text-sm text-white/50">
+              <li>Verified quality</li><li>Secure checkout</li><li>Considered packaging</li><li>30-day returns</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4 border-t border-white/12 pt-7 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} ShopHub. Curated with care.</p>
+          <div className="flex flex-wrap gap-5"><span>Visa</span><span>Mastercard</span><span>Amex</span><span>Cash on delivery</span></div>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterColumn({ title, links }: { title: string; links: [string, string][] }) {
+  return (
+    <div>
+      <h3 className="footer-heading">{title}</h3>
+      <ul className="space-y-3 text-sm text-white/50">
+        {links.map(([label, href]) => <li key={label}><Link href={href} className="transition hover:text-[#cdb785]">{label}</Link></li>)}
+      </ul>
+    </div>
   );
 }

@@ -86,42 +86,56 @@ export default function AddressesPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="animate-fade-in space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900">Address Book</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your saved shipping and billing addresses.</p>
+          <h1 className="text-3xl font-black text-slate-900">Address Book</h1>
+          <p className="text-slate-500 text-sm mt-1">Manage your saved shipping and billing addresses.</p>
         </div>
-        <Button onClick={() => setShowModal(true)}>+ Add New Address</Button>
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl px-5 py-2.5 font-semibold text-sm hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 transition"
+        >
+          + Add New Address
+        </button>
       </div>
 
       {addresses.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-2xl p-12 text-center shadow-sm space-y-4">
-          <p className="text-gray-500 text-lg">No addresses saved yet.</p>
-          <Button onClick={() => setShowModal(true)}>Create Your First Address</Button>
+        <div className="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-sm text-center py-16 px-4 animate-slide-up">
+          <div className="text-6xl mb-4">🏠</div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">No addresses saved</h3>
+          <p className="text-slate-500 mb-6 max-w-md mx-auto">You haven't saved any addresses yet. Add one now for faster checkout.</p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl px-6 py-2.5 font-semibold hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 transition"
+          >
+            Create Your First Address
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {addresses.map((addr) => (
-            <div key={addr.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-3 relative">
+            <div key={addr.id} className="bg-white/80 backdrop-blur-xl border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-3 relative hover:-translate-y-1 transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50">
               {addr.isDefault && (
-                <span className="absolute top-4 right-4 bg-blue-50 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full">
-                  Default Address
+                <span className="absolute top-4 right-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full shadow-sm">
+                  Default
                 </span>
               )}
-              <h3 className="font-bold text-gray-900 text-base">{addr.fullName}</h3>
-              <p className="text-sm text-gray-600 font-mono">{addr.phone}</p>
-              <p className="text-sm text-gray-600">{addr.addressLine1}</p>
-              <p className="text-sm text-gray-600">{addr.city}, {addr.state} {addr.postalCode}</p>
-              <p className="text-sm text-gray-600">{addr.country}</p>
+              <h3 className="font-bold text-slate-900 text-base">{addr.fullName}</h3>
+              <p className="text-sm text-slate-600 font-mono bg-slate-50 inline-block px-2 py-1 rounded-md border border-slate-100">{addr.phone}</p>
+              <div className="text-sm text-slate-600 mt-2">
+                <p>{addr.addressLine1}</p>
+                <p>{addr.city}, {addr.state} {addr.postalCode}</p>
+                <p>{addr.country}</p>
+              </div>
 
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
-                {!addr.isDefault && (
-                  <button onClick={() => handleSetDefault(addr.id)} className="text-xs text-blue-600 font-semibold hover:underline">
+              <div className="pt-4 mt-4 border-t border-slate-200/80 flex items-center justify-between">
+                {!addr.isDefault ? (
+                  <button onClick={() => handleSetDefault(addr.id)} className="text-xs text-blue-600 font-semibold hover:text-blue-700 hover:underline transition-colors">
                     Set as Default
                   </button>
-                )}
-                <button onClick={() => handleDelete(addr.id)} className="text-xs text-red-600 font-semibold hover:underline ml-auto">
+                ) : <span />}
+                <button onClick={() => handleDelete(addr.id)} className="text-xs text-rose-500 font-semibold hover:text-rose-600 hover:underline transition-colors ml-auto">
                   Delete
                 </button>
               </div>
@@ -132,87 +146,91 @@ export default function AddressesPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
-            <h2 className="text-xl font-bold text-gray-900">Add New Address</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl animate-slide-up border border-slate-200">
+            <h2 className="text-2xl font-black text-slate-900 mb-6">Add New Address</h2>
+            <form onSubmit={handleCreate} className="space-y-5">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Full Name</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full border border-slate-200 rounded-xl p-3 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Phone Number</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Phone Number</label>
                 <input
                   type="text"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full border border-slate-200 rounded-xl p-3 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Street Address</label>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Street Address</label>
                 <input
                   type="text"
                   required
                   value={addressLine1}
                   onChange={(e) => setAddressLine1(e.target.value)}
-                  className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full border border-slate-200 rounded-xl p-3 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">City</label>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">City</label>
                   <input
                     type="text"
                     required
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border border-slate-200 rounded-xl p-3 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">State</label>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">State</label>
                   <input
                     type="text"
                     required
                     value={state}
                     onChange={(e) => setState(e.target.value)}
-                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border border-slate-200 rounded-xl p-3 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">ZIP Code</label>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">ZIP Code</label>
                   <input
                     type="text"
                     required
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
-                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border border-slate-200 rounded-xl p-3 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase mb-1">Country</label>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Country</label>
                   <input
                     type="text"
                     required
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
-                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full border border-slate-200 rounded-xl p-3 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition-all"
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
-                <Button type="submit" disabled={submitting}>{submitting ? 'Saving...' : 'Save Address'}</Button>
+              <div className="flex justify-end space-x-3 pt-4">
+                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                  Cancel
+                </button>
+                <button type="submit" disabled={submitting} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl px-6 py-2.5 font-semibold text-sm hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 transition disabled:opacity-70 disabled:active:scale-100">
+                  {submitting ? 'Saving...' : 'Save Address'}
+                </button>
               </div>
             </form>
           </div>

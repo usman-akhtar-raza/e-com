@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { Product, Category, Brand } from '@/lib/types';
+import type { Brand, Category, Product } from '@/lib/types';
 import { ProductCard } from '@/components/product/ProductCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ArrowIcon, ArrowUpRightIcon, RefreshIcon, ShieldIcon, SparkIcon, TruckIcon } from '@/components/ui/Icons';
+
+const categoryColors = ['#171916', '#55594f', '#8a7a60', '#303740', '#70675c'];
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -16,201 +20,173 @@ export default function HomePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [prodRes, catRes, brandRes] = await Promise.all([
+        const [productResponse, categoryResponse, brandResponse] = await Promise.all([
           api.products.getAll({ limit: 8 }),
           api.categories.getAll(),
           api.brands.getAll(),
         ]);
-        setProducts(prodRes?.data || []);
-        setCategories(catRes || []);
-        setBrands(brandRes || []);
-      } catch (err) {
-        console.error('Failed to load homepage data:', err);
+        setProducts(productResponse?.data || []);
+        setCategories(categoryResponse || []);
+        setBrands(brandResponse || []);
+      } catch (error) {
+        console.error('Failed to load homepage data:', error);
       } finally {
         setLoading(false);
       }
     }
-
     loadData();
   }, []);
 
   return (
-    <div className="space-y-20 pb-20 bg-mesh-gradient min-h-screen">
-      {/* Hero Section */}
-      <section className="relative bg-hero-gradient text-white py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        {/* Animated Gradient Orbs */}
-        <div className="absolute top-10 left-10 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse-glow pointer-events-none" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl animate-pulse-glow pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8 text-center lg:text-left animate-slide-up">
-            <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest text-blue-200 border border-white/10 shadow-lg">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>Flash Sale Active — Up to 50% Off</span>
+    <div className="overflow-hidden bg-[#f4f1ea] text-[#11120f]">
+      <section className="px-3 pb-8 pt-3 sm:px-5 lg:px-7">
+        <div className="editorial-hero mx-auto grid min-h-[620px] max-w-[1440px] overflow-hidden rounded-[28px] border border-black/[0.06] bg-[#e9e5dc] shadow-[0_30px_90px_rgba(17,18,15,0.08)] lg:grid-cols-[0.86fr_1.14fr] lg:rounded-[40px]">
+          <div className="relative z-10 flex flex-col justify-between px-6 py-10 sm:px-10 sm:py-14 lg:px-16 lg:py-16 xl:px-20">
+            <div className="hero-reveal inline-flex w-fit items-center gap-2 rounded-full border border-[#11120f]/15 bg-white/40 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] backdrop-blur-sm">
+              <SparkIcon className="h-3.5 w-3.5 text-[#8c7340]" /> The new edit · 2026
             </div>
 
-            <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-none">
-              Elevate Your <br />
-              <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">
-                Digital Lifestyle
-              </span>
-            </h1>
-
-            <p className="text-slate-300 text-base sm:text-lg max-w-xl leading-relaxed">
-              Explore authentic tech, apparel, books, and home products curated for modern standards with 100% verified buyer ratings.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-              <Link
-                href="/products"
-                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white font-bold px-8 py-4 rounded-2xl hover:shadow-xl hover:shadow-blue-500/25 active:scale-95 transition duration-200 text-sm text-center"
-              >
-                Shop All Catalog →
-              </Link>
-              <Link
-                href="/categories"
-                className="w-full sm:w-auto bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold px-8 py-4 rounded-2xl hover:bg-white/20 active:scale-95 transition duration-200 text-sm text-center"
-              >
-                Browse Categories
-              </Link>
-            </div>
-
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-3 gap-6 pt-6 border-t border-white/10 text-center lg:text-left">
-              <div>
-                <p className="text-2xl font-black text-white">10K+</p>
-                <p className="text-xs text-slate-400 font-medium">Delivered Orders</p>
-              </div>
-              <div>
-                <p className="text-2xl font-black text-emerald-400">99.8%</p>
-                <p className="text-xs text-slate-400 font-medium">Positive Feedback</p>
-              </div>
-              <div>
-                <p className="text-2xl font-black text-indigo-400">24/7</p>
-                <p className="text-xs text-slate-400 font-medium">Customer Support</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Hero Floating Visual Card */}
-          <div className="relative hidden lg:flex justify-center items-center">
-            <div className="w-96 h-96 rounded-3xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-2xl border border-white/20 p-6 shadow-2xl flex flex-col justify-between animate-float">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-blue-300 uppercase tracking-widest">ShopHub Verified</span>
-                <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold">
-                  In Stock
-                </span>
-              </div>
-              <div className="py-6 space-y-2">
-                <p className="text-2xl font-bold text-white">Premium Electronics & Fashion Collection</p>
-                <p className="text-xs text-slate-300">Free 2-day shipping on orders over $100.</p>
-              </div>
-              <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                <div>
-                  <p className="text-xs text-slate-400">Special Promo</p>
-                  <p className="text-lg font-extrabold text-blue-400 font-mono">SAVE10</p>
-                </div>
-                <Link href="/products" className="bg-white text-slate-900 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-100 transition">
-                  Claim Deal
+            <div className="my-12 max-w-[570px] lg:my-6">
+              <p className="hero-reveal hero-delay-1 mb-5 text-xs font-bold uppercase tracking-[0.24em] text-[#75633f]">Objects for a life well lived</p>
+              <h1 className="hero-reveal hero-delay-2 font-display text-[clamp(3.55rem,5.8vw,6.6rem)] leading-[0.82] tracking-[-0.065em]">
+                Better finds.<br />
+                <em className="font-normal text-[#9a7f47]">Beautifully</em> chosen.
+              </h1>
+              <p className="hero-reveal hero-delay-3 mt-8 max-w-md text-base leading-7 text-[#5f6059] sm:text-lg">
+                Distinctive tech, style and home essentials—selected for lasting quality, thoughtful design and everyday delight.
+              </p>
+              <div className="hero-reveal hero-delay-4 mt-9 flex flex-wrap items-center gap-3">
+                <Link href="/products" className="primary-pill">
+                  Shop the collection <ArrowIcon className="h-4 w-4" />
                 </Link>
+                <Link href="/categories" className="secondary-pill">Explore departments</Link>
               </div>
+            </div>
+
+            <div className="flex items-center gap-8 border-t border-[#11120f]/15 pt-5 text-xs font-semibold text-[#5f6059]">
+              <span><strong className="mr-1.5 text-[#11120f]">4.9/5</strong> from verified buyers</span>
+              <span className="hidden sm:inline"><strong className="mr-1.5 text-[#11120f]">10k+</strong> orders delivered</span>
+            </div>
+          </div>
+
+          <div className="relative min-h-[500px] overflow-hidden lg:min-h-full">
+            <Image
+              src="/images/home/editorial-collection-obsidian.png"
+              alt="A curated collection of headphones, a lamp, a leather sneaker, watch and knitwear"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 58vw"
+              className="object-cover object-center transition-transform duration-[1600ms] ease-out hover:scale-[1.025]"
+            />
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/45 to-transparent lg:hidden" />
+            <div className="floating-note absolute bottom-6 left-6 right-6 flex items-center justify-between gap-4 rounded-2xl border border-white/30 bg-[#faf8f2]/88 p-4 shadow-2xl backdrop-blur-xl sm:bottom-8 sm:left-auto sm:right-8 sm:w-[310px]">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#806b3f]">This week only</p>
+                <p className="mt-1 font-display text-2xl tracking-tight">The autumn edit</p>
+              </div>
+              <Link href="/products" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#a88d55] text-white transition hover:rotate-12 hover:bg-[#11120f]" aria-label="Shop the autumn edit">
+                <ArrowUpRightIcon className="h-5 w-5" />
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Promo Banner Callout */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-indigo-900 via-slate-900 to-purple-950 rounded-3xl p-8 sm:p-10 text-white shadow-xl border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2">
-            <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-widest border border-blue-500/30">
-              Limited Edition Promo
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold">
-              Use Code <span className="font-mono text-blue-400 underline decoration-wavy">SAVE10</span> for 10% Instant Discount
-            </h2>
-            <p className="text-slate-400 text-sm">Valid on all orders above $50. Automatically applied at checkout!</p>
-          </div>
-          <Link
-            href="/products"
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-8 py-3.5 rounded-2xl hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 transition text-sm flex-shrink-0"
-          >
-            Start Shopping Now →
-          </Link>
+      <section className="border-y border-[#11120f]/10 bg-[#faf8f3]">
+        <div className="mx-auto grid max-w-[1440px] grid-cols-1 divide-y divide-[#11120f]/10 px-5 sm:grid-cols-3 sm:divide-x sm:divide-y-0 lg:px-10">
+          {[
+            { icon: TruckIcon, title: 'Complimentary delivery', text: 'On orders over $100' },
+            { icon: RefreshIcon, title: 'Easy returns', text: '30 days to decide' },
+            { icon: ShieldIcon, title: 'Curated & verified', text: 'Quality you can trust' },
+          ].map(({ icon: Icon, title, text }) => (
+            <div key={title} className="flex items-center justify-center gap-4 py-6 sm:px-5">
+              <Icon className="h-6 w-6 text-[#927a48]" />
+              <div><p className="text-sm font-bold">{title}</p><p className="mt-0.5 text-xs text-[#74756e]">{text}</p></div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Featured Categories */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex items-center justify-between">
+      <section className="mx-auto max-w-[1440px] px-5 py-20 sm:px-7 lg:px-10 lg:py-28">
+        <div className="mb-10 flex items-end justify-between gap-6">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Featured Categories</h2>
-            <p className="text-slate-500 text-sm mt-1">Explore our top product departments</p>
+            <p className="eyebrow">Shop your way</p>
+            <h2 className="section-title">Curated by category.</h2>
           </div>
-          <Link href="/categories" className="text-blue-600 font-bold text-sm hover:underline flex items-center space-x-1">
-            <span>Explore All</span>
-            <span>→</span>
-          </Link>
+          <Link href="/categories" className="text-link hidden sm:inline-flex">View all categories <ArrowIcon className="h-4 w-4" /></Link>
         </div>
 
-        {loading ? (
-          <LoadingSpinner />
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
-            {categories.slice(0, 5).map((cat) => (
+        {loading ? <LoadingSpinner /> : (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5 lg:gap-5">
+            {categories.slice(0, 5).map((category, index) => (
               <Link
-                key={cat.id}
-                href={`/products?categoryId=${cat.id}`}
-                className="group bg-white/80 backdrop-blur-md border border-slate-200/70 rounded-2xl p-6 text-center hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
+                key={category.id}
+                href={`/products?categoryId=${category.id}`}
+                className="category-tile group relative flex min-h-[250px] flex-col justify-between overflow-hidden rounded-[22px] p-5 sm:min-h-[320px] sm:p-6"
+                style={{ backgroundColor: categoryColors[index % categoryColors.length] }}
               >
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-50 to-indigo-50 text-blue-600 flex items-center justify-center font-black text-2xl mb-4 group-hover:bg-gradient-to-tr group-hover:from-blue-600 group-hover:to-indigo-600 group-hover:text-white transition duration-300 shadow-sm">
-                  {cat.name[0]}
+                <div className="absolute -right-8 top-12 font-display text-[10rem] leading-none text-white/10 transition duration-500 group-hover:scale-110 group-hover:text-white/15 sm:text-[13rem]">
+                  {category.name.charAt(0)}
                 </div>
-                <h3 className="font-bold text-slate-900 text-base group-hover:text-blue-600 transition">{cat.name}</h3>
+                <span className="relative text-xs font-bold text-white/75">0{index + 1}</span>
+                <div className="relative">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-white/70">Explore</p>
+                  <h3 className="font-display text-3xl leading-none tracking-tight text-white sm:text-4xl">{category.name}</h3>
+                  <span className="mt-5 grid h-10 w-10 place-items-center rounded-full border border-white/35 text-white transition duration-300 group-hover:translate-x-1 group-hover:bg-white group-hover:text-[#11120f]">
+                    <ArrowUpRightIcon className="h-4 w-4" />
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
         )}
+        <Link href="/categories" className="text-link mt-7 inline-flex sm:hidden">View all categories <ArrowIcon className="h-4 w-4" /></Link>
       </section>
 
-      {/* Brands Showcase Bar */}
-      <section className="bg-slate-900 py-10 border-y border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-xs font-black uppercase tracking-widest text-slate-500 mb-6">
-            Official Brand Partners
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-10 sm:gap-20">
-            {brands.map((b) => (
-              <span key={b.id} className="text-xl sm:text-2xl font-black font-mono tracking-widest text-slate-400 hover:text-white transition cursor-pointer">
-                {b.name.toUpperCase()}
-              </span>
-            ))}
-          </div>
+      <section className="bg-[#11120f] py-8 text-[#f4f1ea]">
+        <div className="brand-marquee flex min-w-max items-center gap-12 pr-12 sm:gap-20 sm:pr-20">
+          {[...brands, ...brands].map((brand, index) => (
+            <span key={`${brand.id}-${index}`} className="flex items-center gap-12 text-xl font-black tracking-[-0.035em] sm:gap-20 sm:text-2xl">
+              {brand.name.toUpperCase()} <span className="h-1.5 w-1.5 rounded-full bg-[#b69b63]" />
+            </span>
+          ))}
         </div>
       </section>
 
-      {/* New Arrivals Product Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex items-center justify-between">
+      <section className="mx-auto max-w-[1440px] px-5 py-20 sm:px-7 lg:px-10 lg:py-28">
+        <div className="mb-10 flex items-end justify-between gap-6">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900">New Arrivals</h2>
-            <p className="text-slate-500 text-sm mt-1">Trending products hot off the shelf</p>
+            <p className="eyebrow">Freshly selected</p>
+            <h2 className="section-title">New and noteworthy.</h2>
           </div>
-          <Link href="/products" className="text-blue-600 font-bold text-sm hover:underline flex items-center space-x-1">
-            <span>Browse Full Catalog</span>
-            <span>→</span>
-          </Link>
+          <Link href="/products" className="text-link hidden sm:inline-flex">See the full edit <ArrowIcon className="h-4 w-4" /></Link>
         </div>
 
-        {loading ? (
-          <LoadingSpinner />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+        {loading ? <LoadingSpinner /> : (
+          <div className="grid grid-cols-1 gap-x-4 gap-y-9 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-5">
+            {products.slice(0, 8).map((product) => <ProductCard key={product.id} product={product} />)}
           </div>
         )}
+      </section>
+
+      <section className="px-3 pb-24 sm:px-5 lg:px-7 lg:pb-32">
+        <div className="mx-auto grid max-w-[1440px] overflow-hidden rounded-[28px] border border-[#b69b63]/30 bg-[#11120f] text-white shadow-[0_35px_100px_rgba(17,18,15,0.18)] lg:grid-cols-[1.2fr_0.8fr] lg:rounded-[40px]">
+          <div className="p-8 sm:p-12 lg:p-16 xl:p-20">
+            <p className="mb-8 text-xs font-bold uppercase tracking-[0.22em] text-white/65">The ShopHub promise</p>
+            <blockquote className="max-w-4xl font-display text-[clamp(2.8rem,5.5vw,6.2rem)] leading-[0.9] tracking-[-0.05em]">
+              Less scrolling.<br /><em className="font-normal text-[#cdb785]">More discovering.</em>
+            </blockquote>
+            <p className="mt-8 max-w-xl text-base leading-7 text-white/75 sm:text-lg">We sift through the ordinary to bring you pieces with purpose, personality and staying power.</p>
+          </div>
+          <div className="flex min-h-[320px] flex-col justify-between border-t border-[#11120f]/15 bg-[#b69b63] p-8 text-[#11120f] sm:p-12 lg:min-h-0 lg:border-l lg:border-t-0 lg:p-16">
+            <span className="font-display text-8xl leading-none text-[#11120f]/20">“</span>
+            <div>
+              <p className="font-display text-3xl leading-tight">“Everything feels considered—from the products to the packaging.”</p>
+              <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-[#11120f]/55">Nadia K. · Verified buyer</p>
+              <Link href="/products" className="mt-9 inline-flex items-center gap-2 rounded-full bg-[#11120f] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-white hover:text-[#11120f]">Start exploring <ArrowIcon className="h-4 w-4" /></Link>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );

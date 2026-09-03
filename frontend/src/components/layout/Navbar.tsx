@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { api } from '@/lib/api';
+import { BagIcon, CloseIcon, HeartIcon, MenuIcon, SearchIcon, UserIcon } from '@/components/ui/Icons';
 
 export function Navbar() {
   const { user, logout } = useAuth();
@@ -17,105 +18,70 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    function handleScroll() {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    }
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => setIsScrolled(window.scrollY > 12);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
-    if (user) {
-      api.cart.get()
-        .then(cart => {
-          const totalQty = cart?.items?.reduce((acc, i) => acc + i.quantity, 0) || 0;
-          setCartCount(totalQty);
-        })
-        .catch(() => setCartCount(0));
+    if (!user) return;
 
-      api.wishlist.get()
-        .then(items => {
-          setWishlistCount(items?.length || 0);
-        })
-        .catch(() => setWishlistCount(0));
-    } else {
-      setCartCount(0);
-      setWishlistCount(0);
-    }
+    api.cart.get()
+      .then((cart) => setCartCount(cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0))
+      .catch(() => setCartCount(0));
+    api.wishlist.get()
+      .then((items) => setWishlistCount(items?.length || 0))
+      .catch(() => setWishlistCount(0));
   }, [user, pathname]);
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
+  function handleSearch(event: React.FormEvent) {
+    event.preventDefault();
+    if (!searchQuery.trim()) return;
+    router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    setMobileMenuOpen(false);
   }
 
   const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Products', href: '/products' },
-    { name: 'Categories', href: '/categories' },
+    { name: 'New in', href: '/products' },
+    { name: 'Collections', href: '/categories' },
+    { name: 'Best sellers', href: '/products?sortBy=createdAt&sortOrder=DESC' },
   ];
 
+  if (pathname.startsWith('/admin')) return null;
+
   return (
-    <nav
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white/85 backdrop-blur-xl border-b border-slate-200/80 shadow-sm py-2'
-          : 'bg-white/95 backdrop-blur-md border-b border-slate-100 py-3'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-12">
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition duration-300">
-              <span className="text-white font-black text-xl">S</span>
-            </div>
-            <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-700 bg-clip-text text-transparent">
-              ShopHub
+    <header className="sticky top-0 z-50">
+      <div className="bg-[#11120f] px-4 py-2 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-[#f4f1ea] sm:text-[11px]">
+        Complimentary delivery on orders over $100 <span className="mx-2 text-[#b69b63]">•</span> Easy 30-day returns
+      </div>
+
+      <nav className={`border-b transition-all duration-300 ${isScrolled ? 'border-black/10 bg-[#faf8f3]/95 shadow-[0_8px_30px_rgba(17,18,15,0.07)] backdrop-blur-xl' : 'border-black/8 bg-[#faf8f3]'}`}>
+        <div className="mx-auto flex h-[72px] max-w-[1440px] items-center gap-5 px-4 sm:px-6 lg:px-10">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="grid h-10 w-10 place-items-center rounded-full border border-black/10 text-[#11120f] lg:hidden"
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+          </button>
+
+          <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="ShopHub home">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-[#11120f] font-display text-xl font-bold italic text-[#cdb785] ring-1 ring-[#b69b63]/50 transition-transform duration-300 group-hover:rotate-[-8deg]">
+              S
             </span>
+            <span className="text-xl font-black tracking-[-0.045em] text-[#11120f] sm:text-2xl">SHOPHUB</span>
           </Link>
 
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-md mx-6 hidden md:block">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search products, categories, brands..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-12 py-2 bg-slate-100/80 hover:bg-slate-100 focus:bg-white border border-slate-200/80 rounded-full text-sm font-medium transition duration-200 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none text-slate-800 placeholder-slate-400"
-              />
-              <span className="absolute left-3.5 top-2.5 text-slate-400 text-sm">
-                🔍
-              </span>
-              <button
-                type="submit"
-                className="absolute right-1.5 top-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full px-3 py-1 text-xs font-semibold hover:opacity-90 transition shadow-sm"
-              >
-                Go
-              </button>
-            </div>
-          </form>
-
-          {/* Navigation Links */}
-          <div className="hidden lg:flex items-center space-x-1 text-sm font-semibold">
+          <div className="hidden flex-1 items-center justify-center gap-1 lg:flex">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+              const active = pathname === link.href || (link.href === '/products' && pathname.startsWith('/products'));
               return (
                 <Link
-                  key={link.href}
+                  key={link.name}
                   href={link.href}
-                  className={`px-4 py-2 rounded-full transition duration-200 ${
-                    isActive
-                      ? 'bg-slate-100 text-blue-600 font-bold'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
+                  className={`rounded-full px-4 py-2 text-[13px] font-semibold transition-colors ${active ? 'bg-[#e9e4da] text-[#11120f]' : 'text-[#61625c] hover:bg-black/[0.04] hover:text-[#11120f]'}`}
                 >
                   {link.name}
                 </Link>
@@ -123,93 +89,82 @@ export function Navbar() {
             })}
           </div>
 
-          {/* Action Icons */}
-          <div className="flex items-center space-x-3">
+          <form onSubmit={handleSearch} className="ml-auto hidden w-full max-w-[260px] md:block">
+            <label className="relative block">
+              <span className="sr-only">Search the store</span>
+              <SearchIcon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#77786f]" />
+              <input
+                type="search"
+                placeholder="Search the collection"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="h-11 w-full rounded-full border border-black/10 bg-white/70 pl-10 pr-4 text-sm text-[#11120f] outline-none transition focus:border-[#a88d55] focus:bg-white focus:ring-4 focus:ring-[#a88d55]/12"
+              />
+            </label>
+          </form>
+
+          <div className="flex items-center gap-1 sm:gap-2">
             {user && (
-              <Link
-                href="/account/wishlist"
-                className="p-2.5 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-full relative transition duration-200"
-                title="Saved Wishlist"
-              >
-                <span className="text-xl">❤️</span>
-                {wishlistCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[10px] font-black rounded-full h-4 w-4 flex items-center justify-center animate-pulse-glow shadow-sm">
-                    {wishlistCount}
-                  </span>
-                )}
+              <Link href="/account/wishlist" className="relative grid h-10 w-10 place-items-center rounded-full text-[#11120f] transition hover:bg-[#e9e4da]" aria-label="Wishlist">
+                <HeartIcon className="h-5 w-5" />
+                {wishlistCount > 0 && <span className="count-badge">{wishlistCount}</span>}
               </Link>
             )}
 
-            <Link
-              href="/cart"
-              className="p-2.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-full relative transition duration-200"
-              title="Shopping Cart"
-            >
-              <span className="text-xl">🛒</span>
-              {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black rounded-full h-4.5 w-4.5 flex items-center justify-center shadow-md shadow-blue-500/30">
-                  {cartCount}
-                </span>
-              )}
+            <Link href="/cart" className="relative grid h-10 w-10 place-items-center rounded-full text-[#11120f] transition hover:bg-[#e9e4da]" aria-label="Shopping bag">
+              <BagIcon className="h-5 w-5" />
+              {cartCount > 0 && <span className="count-badge">{cartCount}</span>}
             </Link>
 
             {user ? (
-              <div className="relative group">
-                <button className="flex items-center space-x-2 pl-2 pr-3 py-1.5 rounded-full border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 transition duration-200">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                    {user.firstName[0]}
-                  </div>
-                  <span className="text-xs font-bold text-slate-800 hidden sm:inline">{user.firstName}</span>
-                  <span className="text-[10px] text-slate-400">▼</span>
+              <div className="group relative">
+                <button className="flex h-10 items-center gap-2 rounded-full border border-black/10 bg-white/70 px-2.5 text-sm font-semibold text-[#11120f] transition hover:bg-white">
+                  <span className="grid h-6 w-6 place-items-center rounded-full bg-[#11120f] text-[10px] text-[#cdb785]">{user.firstName[0]}</span>
+                  <span className="hidden sm:inline">{user.firstName}</span>
                 </button>
-
-                {/* Dropdown Menu */}
-                <div className="absolute right-0 w-52 mt-2 py-2 bg-white/95 backdrop-blur-xl border border-slate-100 rounded-2xl shadow-xl shadow-slate-200/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <div className="px-4 py-2 border-b border-slate-100">
-                    <p className="text-xs font-bold text-slate-900">{user.firstName} {user.lastName}</p>
-                    <p className="text-[11px] text-slate-400 font-mono truncate">{user.email}</p>
+                <div className="invisible absolute right-0 top-full z-50 mt-2 w-56 translate-y-2 rounded-2xl border border-black/10 bg-[#faf8f3] p-2 opacity-0 shadow-[0_20px_60px_rgba(17,18,15,0.16)] transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+                  <div className="border-b border-black/8 px-3 py-2.5">
+                    <p className="font-semibold text-[#11120f]">{user.firstName} {user.lastName}</p>
+                    <p className="mt-0.5 truncate text-xs text-[#77786f]">{user.email}</p>
                   </div>
-                  <Link href="/account" className="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition">
-                    Dashboard Overview
-                  </Link>
-                  <Link href="/account/orders" className="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition">
-                    My Orders
-                  </Link>
-                  <Link href="/account/wishlist" className="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition">
-                    Saved Wishlist
-                  </Link>
-                  <Link href="/account/addresses" className="block px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition">
-                    Address Book
-                  </Link>
-
-                  {user.role === 'ADMIN' && (
-                    <Link
-                      href="/admin"
-                      className="block px-4 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 border-t border-slate-100 mt-1 transition"
-                    >
-                      ⚡ Admin Portal
-                    </Link>
-                  )}
-
-                  <button
-                    onClick={logout}
-                    className="block w-full text-left px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 border-t border-slate-100 mt-1 transition"
-                  >
-                    Logout
-                  </button>
+                  <Link href="/account" className="nav-menu-item">My account</Link>
+                  <Link href="/account/orders" className="nav-menu-item">Orders</Link>
+                  <Link href="/account/wishlist" className="nav-menu-item">Saved items</Link>
+                  {user.role === 'ADMIN' && <Link href="/admin" className="nav-menu-item text-[#806a3d]">Admin portal</Link>}
+                  <button onClick={() => { setCartCount(0); setWishlistCount(0); logout(); }} className="nav-menu-item w-full text-left text-[#a03c2a]">Sign out</button>
                 </div>
               </div>
             ) : (
-              <Link
-                href="/login"
-                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white px-5 py-2 rounded-full text-xs font-bold hover:shadow-lg hover:shadow-blue-500/25 active:scale-95 transition duration-200"
-              >
-                Sign In
+              <Link href="/login" className="hidden h-10 items-center gap-2 rounded-full border border-[#11120f] px-4 text-sm font-bold text-[#11120f] transition hover:bg-[#11120f] hover:text-[#d8c28f] sm:flex">
+                <UserIcon className="h-4 w-4" /> Sign in
               </Link>
             )}
           </div>
         </div>
-      </div>
-    </nav>
+
+        {mobileMenuOpen && (
+          <div className="border-t border-black/8 bg-[#faf8f3] px-4 pb-5 pt-4 shadow-xl lg:hidden">
+            <form onSubmit={handleSearch} className="mb-4 md:hidden">
+              <label className="relative block">
+                <SearchIcon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#77786f]" />
+                <input
+                  type="search"
+                  aria-label="Search the store"
+                  placeholder="Search the collection"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  className="h-12 w-full rounded-full border border-black/10 bg-white pl-10 pr-4 text-sm outline-none focus:border-[#a88d55]"
+                />
+              </label>
+            </form>
+            <div className="grid gap-1">
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="mobile-nav-link">Home</Link>
+              {navLinks.map((link) => <Link key={link.name} href={link.href} onClick={() => setMobileMenuOpen(false)} className="mobile-nav-link">{link.name}</Link>)}
+              {!user && <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="mobile-nav-link text-[#806a3d]">Sign in</Link>}
+            </div>
+          </div>
+        )}
+      </nav>
+    </header>
   );
 }

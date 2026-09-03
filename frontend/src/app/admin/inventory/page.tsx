@@ -57,7 +57,7 @@ export default function AdminInventoryPage() {
 
       {/* Low Stock Alerts Banner */}
       <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-        <h2 className="text-lg font-bold text-red-900 mb-2">⚠️ Low Stock Alerts ({alerts.length})</h2>
+        <h2 className="text-lg font-bold text-red-900 mb-2">Low Stock Alerts ({alerts.length})</h2>
         {alerts.length === 0 ? (
           <p className="text-red-700 text-sm">No critical inventory alerts.</p>
         ) : (

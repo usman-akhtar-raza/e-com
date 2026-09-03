@@ -1,74 +1,96 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useDeferredValue, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
-import { Product, Category, Brand } from '@/lib/types';
+import type { Brand, Category, Product } from '@/lib/types';
 import { ProductCard } from '@/components/product/ProductCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { CloseIcon, GridIcon, SearchIcon, SlidersIcon, SparkIcon } from '@/components/ui/Icons';
+
+type SortOrder = 'ASC' | 'DESC';
+type ProductQuery = {
+  limit: number;
+  sortBy: string;
+  sortOrder: SortOrder;
+  categoryId?: string;
+  brandId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  search?: string;
+};
+
+const sortOptions = [
+  { value: 'createdAt:DESC', label: 'Newest first' },
+  { value: 'price:ASC', label: 'Price: low to high' },
+  { value: 'price:DESC', label: 'Price: high to low' },
+  { value: 'name:ASC', label: 'Name: A–Z' },
+];
 
 function ProductsContent() {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get('categoryId') || '';
-  const initialSearch = searchParams.get('search') || '';
-
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Filters
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('categoryId') || '');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [search, setSearch] = useState(initialSearch);
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'createdAt');
+  const [sortOrder, setSortOrder] = useState<SortOrder>(searchParams.get('sortOrder') === 'ASC' ? 'ASC' : 'DESC');
+  const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
-    loadFilterOptions();
+    let active = true;
+    async function fetchFilterOptions() {
+      try {
+        const [categoryResponse, brandResponse] = await Promise.all([
+          api.categories.getAll(),
+          api.brands.getAll(),
+        ]);
+        if (!active) return;
+        setCategories(categoryResponse || []);
+        setBrands(brandResponse || []);
+      } catch (error) {
+        console.error('Failed to load filter options:', error);
+      }
+    }
+    fetchFilterOptions();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
-    loadProducts();
-  }, [selectedCategory, selectedBrand, minPrice, maxPrice, search, sortBy, sortOrder]);
+    let active = true;
+    async function fetchProducts() {
+      setLoading(true);
+      const query: ProductQuery = { limit: 24, sortBy, sortOrder };
+      if (selectedCategory) query.categoryId = selectedCategory;
+      if (selectedBrand) query.brandId = selectedBrand;
+      if (minPrice) query.minPrice = Number(minPrice);
+      if (maxPrice) query.maxPrice = Number(maxPrice);
+      if (deferredSearch.trim()) query.search = deferredSearch.trim();
 
-  async function loadFilterOptions() {
-    try {
-      const [catRes, brandRes] = await Promise.all([
-        api.categories.getAll(),
-        api.brands.getAll(),
-      ]);
-      setCategories(catRes || []);
-      setBrands(brandRes || []);
-    } catch (err) {
-      console.error('Failed to load filter options:', err);
+      try {
+        const response = await api.products.getAll(query);
+        if (active) setProducts(response?.data || []);
+      } catch (error) {
+        console.error('Failed to load products:', error);
+      } finally {
+        if (active) setLoading(false);
+      }
     }
-  }
+    fetchProducts();
+    return () => { active = false; };
+  }, [deferredSearch, maxPrice, minPrice, selectedBrand, selectedCategory, sortBy, sortOrder]);
 
-  async function loadProducts() {
-    setLoading(true);
-    try {
-      const params: any = {
-        limit: 24,
-        sortBy,
-        sortOrder,
-      };
-      if (selectedCategory) params.categoryId = selectedCategory;
-      if (selectedBrand) params.brandId = selectedBrand;
-      if (minPrice) params.minPrice = minPrice;
-      if (maxPrice) params.maxPrice = maxPrice;
-      if (search) params.search = search;
-
-      const res = await api.products.getAll(params);
-      setProducts(res?.data || []);
-    } catch (err) {
-      console.error('Failed to load products:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const activeFilterCount = [selectedCategory, selectedBrand, minPrice, maxPrice, deferredSearch].filter(Boolean).length;
+  const activeCategory = categories.find((category) => category.id === selectedCategory);
+  const activeBrand = brands.find((brand) => brand.id === selectedBrand);
 
   function handleResetFilters() {
     setSelectedCategory('');
@@ -76,147 +98,175 @@ function ProductsContent() {
     setMinPrice('');
     setMaxPrice('');
     setSearch('');
-    setSortBy('createdAt');
-    setSortOrder('DESC');
+  }
+
+  function handleSort(value: string) {
+    const [field, order] = value.split(':');
+    setSortBy(field);
+    setSortOrder(order as SortOrder);
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
-      {/* Glass Sidebar Filter Panel */}
-      <aside className="w-full lg:w-72 flex-shrink-0 space-y-6 bg-white/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/80 shadow-sm h-fit">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-          <h2 className="text-base font-extrabold text-slate-900 flex items-center space-x-2">
-            <span>⚙️</span>
-            <span>Catalog Filters</span>
-          </h2>
-          <button onClick={handleResetFilters} className="text-xs text-blue-600 font-bold hover:underline">
-            Reset All
-          </button>
-        </div>
-
-        {/* Search */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Search Catalog</label>
-          <input
-            type="text"
-            placeholder="Product name or SKU..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
-          />
-        </div>
-
-        {/* Categories */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Category</label>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
-          >
-            <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Brands */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Brand</label>
-          <select
-            value={selectedBrand}
-            onChange={(e) => setSelectedBrand(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
-          >
-            <option value="">All Brands</option>
-            {brands.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Price Range */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Price Filter ($)</label>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              placeholder="Min ($)"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl p-2 text-xs font-medium focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
-            />
-            <input
-              type="number"
-              placeholder="Max ($)"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl p-2 text-xs font-medium focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
-            />
+    <div className="min-h-screen bg-[#f4f1ea] pb-24 text-[#11120f]">
+      <section className="relative overflow-hidden border-b border-black/10 bg-[#11120f] text-white">
+        <div className="catalog-glow absolute inset-0 opacity-70" />
+        <div className="relative mx-auto max-w-[1440px] px-5 py-14 sm:px-7 sm:py-20 lg:px-10">
+          <div className="mb-10 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
+            <Link href="/" className="transition hover:text-[#cdb785]">Home</Link>
+            <span>/</span>
+            <span className="text-[#cdb785]">The collection</span>
+          </div>
+          <div className="grid items-end gap-8 lg:grid-cols-[1fr_0.75fr]">
+            <div>
+              <p className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-[#cdb785]">
+                <SparkIcon className="h-4 w-4" /> Curated essentials
+              </p>
+              <h1 className="font-display text-[clamp(3.8rem,7vw,7.5rem)] leading-[0.82] tracking-[-0.06em]">
+                The complete<br /><em className="font-normal text-[#b69b63]">collection.</em>
+              </h1>
+            </div>
+            <p className="max-w-xl text-sm leading-7 text-white/55 sm:text-base lg:justify-self-end">
+              Explore considered objects for work, home and everywhere between. Every piece is selected for design, quality and lasting usefulness.
+            </p>
           </div>
         </div>
+      </section>
 
-        {/* Sorting */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Sort Ordering</label>
-          <select
-            value={`${sortBy}:${sortOrder}`}
-            onChange={(e) => {
-              const [sb, so] = e.target.value.split(':');
-              setSortBy(sb);
-              setSortOrder(so as 'ASC' | 'DESC');
-            }}
-            className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none bg-slate-50"
-          >
-            <option value="createdAt:DESC">Newest Arrivals</option>
-            <option value="price:ASC">Price: Low to High</option>
-            <option value="price:DESC">Price: High to Low</option>
-            <option value="name:ASC">Product Name: A-Z</option>
-          </select>
-        </div>
-      </aside>
-
-      {/* Main Products Grid */}
-      <main className="flex-1 space-y-6">
-        <div className="flex items-center justify-between bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Displaying <span className="text-blue-600 font-black">{products.length}</span> Verified Products
-          </p>
-        </div>
-
-        {loading ? (
-          <LoadingSpinner />
-        ) : products.length === 0 ? (
-          <div className="bg-white rounded-3xl p-16 text-center border border-slate-200/80 shadow-sm space-y-4">
-            <div className="text-4xl">🔍</div>
-            <h3 className="text-xl font-extrabold text-slate-900">No Matching Products Found</h3>
-            <p className="text-slate-500 text-sm max-w-sm mx-auto">Try clearing active search filters or selecting another category.</p>
+      <div className="mx-auto max-w-[1440px] px-5 py-10 sm:px-7 lg:px-10 lg:py-14">
+        <div className="mb-8 flex flex-col gap-4 border-b border-black/10 pb-7 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <GridIcon className="h-4 w-4 text-[#806a3d]" />
+            <p className="text-sm font-semibold">
+              {loading ? 'Curating the collection…' : <><span className="font-black">{products.length}</span> pieces found</>}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
             <button
-              onClick={handleResetFilters}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-full text-xs hover:shadow-lg transition"
+              type="button"
+              onClick={() => setMobileFiltersOpen((open) => !open)}
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-black/15 bg-[#faf8f3] px-4 text-xs font-bold lg:hidden"
+              aria-expanded={mobileFiltersOpen}
             >
-              Reset Filters
+              {mobileFiltersOpen ? <CloseIcon className="h-4 w-4" /> : <SlidersIcon className="h-4 w-4" />}
+              Filters {activeFilterCount > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#11120f] px-1 text-[10px] text-white">{activeFilterCount}</span>}
             </button>
+            <label className="relative min-w-[190px] flex-1 sm:flex-none">
+              <span className="sr-only">Sort products</span>
+              <select value={`${sortBy}:${sortOrder}`} onChange={(event) => handleSort(event.target.value)} className="catalog-select h-11 w-full rounded-full pl-4 pr-10 text-xs font-bold">
+                {sortOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </label>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </main>
+        </div>
+
+        <div className="grid gap-10 lg:grid-cols-[270px_minmax(0,1fr)] xl:gap-14">
+          <aside className={`${mobileFiltersOpen ? 'block' : 'hidden'} catalog-filter-panel h-fit rounded-[24px] border border-black/10 bg-[#faf8f3] p-5 shadow-[0_18px_50px_rgba(17,18,15,0.06)] lg:sticky lg:top-[130px] lg:block lg:p-6`}>
+            <div className="mb-6 flex items-center justify-between border-b border-black/10 pb-5">
+              <div className="flex items-center gap-2">
+                <SlidersIcon className="h-4 w-4 text-[#806a3d]" />
+                <h2 className="text-sm font-black">Refine</h2>
+              </div>
+              {activeFilterCount > 0 && <button type="button" onClick={handleResetFilters} className="text-[10px] font-black uppercase tracking-[0.12em] text-[#806a3d] hover:underline">Clear all</button>}
+            </div>
+
+            <div className="space-y-7">
+              <FilterGroup label="Search">
+                <label className="relative block">
+                  <SearchIcon className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#77786f]" />
+                  <input
+                    type="search"
+                    placeholder="Search products"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    className="catalog-input h-11 w-full rounded-xl pl-10 pr-3 text-sm"
+                  />
+                </label>
+              </FilterGroup>
+
+              <FilterGroup label="Category">
+                <div className="space-y-1">
+                  <FilterOption active={!selectedCategory} label="All categories" onClick={() => setSelectedCategory('')} />
+                  {categories.map((category) => (
+                    <FilterOption key={category.id} active={selectedCategory === category.id} label={category.name} onClick={() => setSelectedCategory(category.id)} />
+                  ))}
+                </div>
+              </FilterGroup>
+
+              <FilterGroup label="Brand">
+                <select value={selectedBrand} onChange={(event) => setSelectedBrand(event.target.value)} className="catalog-select h-11 w-full rounded-xl px-3 text-xs font-bold">
+                  <option value="">All brands</option>
+                  {brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
+                </select>
+              </FilterGroup>
+
+              <FilterGroup label="Price range">
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" min="0" aria-label="Minimum price" placeholder="Min $" value={minPrice} onChange={(event) => setMinPrice(event.target.value)} className="catalog-input h-11 min-w-0 rounded-xl px-3 text-xs" />
+                  <input type="number" min="0" aria-label="Maximum price" placeholder="Max $" value={maxPrice} onChange={(event) => setMaxPrice(event.target.value)} className="catalog-input h-11 min-w-0 rounded-xl px-3 text-xs" />
+                </div>
+              </FilterGroup>
+            </div>
+          </aside>
+
+          <main className="min-w-0">
+            {activeFilterCount > 0 && (
+              <div className="mb-7 flex flex-wrap items-center gap-2">
+                <span className="mr-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#74756e]">Active</span>
+                {activeCategory && <FilterChip label={activeCategory.name} onRemove={() => setSelectedCategory('')} />}
+                {activeBrand && <FilterChip label={activeBrand.name} onRemove={() => setSelectedBrand('')} />}
+                {deferredSearch && <FilterChip label={`“${deferredSearch}”`} onRemove={() => setSearch('')} />}
+                {minPrice && <FilterChip label={`From $${minPrice}`} onRemove={() => setMinPrice('')} />}
+                {maxPrice && <FilterChip label={`Up to $${maxPrice}`} onRemove={() => setMaxPrice('')} />}
+              </div>
+            )}
+
+            {loading ? (
+              <div className="grid min-h-[420px] place-items-center rounded-[28px] border border-black/[0.06] bg-[#faf8f3]"><LoadingSpinner /></div>
+            ) : products.length === 0 ? (
+              <div className="grid min-h-[460px] place-items-center rounded-[28px] border border-black/10 bg-[#faf8f3] p-8 text-center">
+                <div>
+                  <span className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-full border border-[#b69b63]/45 bg-[#b69b63]/10 text-[#806a3d]"><SearchIcon className="h-6 w-6" /></span>
+                  <h3 className="font-display text-4xl tracking-[-0.04em]">Nothing matched.</h3>
+                  <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#6c6d66]">Try a broader search or clear your filters to rediscover the complete collection.</p>
+                  <button type="button" onClick={handleResetFilters} className="primary-pill mt-7">Reset filters</button>
+                </div>
+              </div>
+            ) : (
+              <div className="catalog-grid grid grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 xl:grid-cols-3 xl:gap-x-5">
+                {products.map((product, index) => (
+                  <div key={product.id} className="catalog-card-reveal" style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}>
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
     </div>
   );
 }
 
-export default function ProductsPage() {
+function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><h3 className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#74756e]">{label}</h3>{children}</div>;
+}
+
+function FilterOption({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <Suspense fallback={<LoadingSpinner />}>
-        <ProductsContent />
-      </Suspense>
-    </div>
+    <button type="button" onClick={onClick} className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs font-semibold transition ${active ? 'bg-[#11120f] text-white' : 'text-[#5f605a] hover:bg-[#ece8df] hover:text-[#11120f]'}`}>
+      {label}<span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-[#cdb785]' : 'bg-transparent'}`} />
+    </button>
   );
+}
+
+function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <button type="button" onClick={onRemove} className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#faf8f3] px-3 py-1.5 text-[11px] font-bold text-[#4f504a] transition hover:border-[#a88d55]/50 hover:text-[#806a3d]">
+      {label}<CloseIcon className="h-3 w-3" />
+    </button>
+  );
+}
+
+export default function ProductsPage() {
+  return <Suspense fallback={<div className="min-h-screen bg-[#f4f1ea] py-24"><LoadingSpinner /></div>}><ProductsContent /></Suspense>;
 }

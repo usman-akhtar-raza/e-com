@@ -1,33 +1,31 @@
 import './globals.css';
-import { Inter } from 'next/font/google';
 import { Metadata } from 'next';
 import { AuthProvider } from '@/context/auth-context';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
-const inter = Inter({ subsets: ['latin'] });
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'ShopHub — Production-Ready E-Commerce Storefront',
+    default: 'ShopHub — Better Finds, Beautifully Chosen',
     template: '%s | ShopHub',
   },
-  description: 'Shop top quality tech, fashion, books, and home essentials with fast shipping and verified ratings.',
+  description: 'Discover thoughtfully selected tech, style and home essentials with fast delivery and easy returns.',
   keywords: ['e-commerce', 'online store', 'shopping', 'electronics', 'fashion', 'deals'],
   alternates: {
     canonical: SITE_URL,
   },
   openGraph: {
-    title: 'ShopHub — Premium E-Commerce Platform',
-    description: 'Shop top quality tech, fashion, books, and home essentials.',
+    title: 'ShopHub — Better Finds, Beautifully Chosen',
+    description: 'Thoughtfully selected tech, style and home essentials.',
     url: SITE_URL,
     siteName: 'ShopHub',
     type: 'website',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200',
+        url: '/images/home/editorial-collection.png',
         width: 1200,
         height: 630,
         alt: 'ShopHub Storefront',
@@ -36,16 +34,16 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ShopHub — Premium E-Commerce Platform',
-    description: 'Shop top quality tech, fashion, books, and home essentials.',
-    images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200'],
+    title: 'ShopHub — Better Finds, Beautifully Chosen',
+    description: 'Thoughtfully selected tech, style and home essentials.',
+    images: ['/images/home/editorial-collection.png'],
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen flex flex-col bg-gray-50 text-gray-900`}>
+      <body className="min-h-screen flex flex-col bg-[#f4f1ea] text-[#11120f]">
         <AuthProvider>
           <Navbar />
           <main className="flex-grow">
