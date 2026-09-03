@@ -1,10 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Unique, Index } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Product } from '../../products/entities/product.entity';
 import { ReviewStatus } from '../../common/enums/review-status.enum';
 
 @Entity('reviews')
 @Unique(['userId', 'productId'])
+@Index(['productId'])
+@Index(['status'])
 export class Review {
   @PrimaryGeneratedColumn('uuid')
   id: string;
