@@ -204,6 +204,7 @@ export interface Review {
   productId: string;
   userId: string;
   user: User;
+  product?: Product;
   rating: number;
   title?: string;
   comment: string;
@@ -223,6 +224,42 @@ export interface ReviewSummary {
     4: number;
     5: number;
   };
+}
+
+export interface DashboardKPIs {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalCustomers: number;
+  lowStockCount: number;
+  pendingOrdersCount: number;
+}
+
+export interface SalesAnalyticsPoint {
+  date: string;
+  revenue: number;
+  ordersCount: number;
+}
+
+export interface TopProductPerformance {
+  productId: string;
+  productName: string;
+  sku?: string;
+  totalQuantitySold: number;
+  totalRevenueGenerated: number;
+}
+
+export interface LowStockAlertItem {
+  id: string;
+  productId: string;
+  productName: string;
+  variantId?: string;
+  variantName?: string;
+  sku: string;
+  quantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+  lowStockThreshold: number;
 }
 
 export interface PaginatedResponse<T> {
