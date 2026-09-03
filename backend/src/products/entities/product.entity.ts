@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 import { Brand } from '../../brands/entities/brand.entity';
 import { ProductVariant } from './product-variant.entity';
@@ -7,6 +7,10 @@ import { Review } from '../../reviews/entities/review.entity';
 import { ProductStatus } from '../../common/enums/product-status.enum';
 
 @Entity('products')
+@Index(['slug'])
+@Index(['categoryId'])
+@Index(['brandId'])
+@Index(['status'])
 export class Product {
   @PrimaryGeneratedColumn('uuid')
   id: string;

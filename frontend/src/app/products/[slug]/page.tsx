@@ -126,8 +126,33 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const displayPrice = selectedVariant?.price || product.price;
   const inStock = (selectedVariant?.stock ?? product.stock) > 0;
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    image: mainImage,
+    description: product.description,
+    sku: product.sku || product.id,
+    brand: product.brand ? { '@type': 'Brand', name: product.brand.name } : undefined,
+    offers: {
+      '@type': 'Offer',
+      price: displayPrice,
+      priceCurrency: 'USD',
+      availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    },
+    aggregateRating: summary?.totalReviews ? {
+      '@type': 'AggregateRating',
+      ratingValue: summary.averageRating,
+      reviewCount: summary.totalReviews,
+    } : undefined,
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumbs */}
       <nav className="flex items-center space-x-2 text-sm text-gray-500">
         <Link href="/" className="hover:text-blue-600">Home</Link>
