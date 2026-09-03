@@ -144,12 +144,17 @@ export interface Cart {
 }
 
 export interface ShippingAddress {
-  firstName: string;
-  lastName: string;
-  street: string;
+  fullName?: string;
+  phone?: string;
+  firstName?: string;
+  lastName?: string;
+  street?: string;
+  addressLine1?: string;
+  addressLine2?: string;
   city: string;
   state: string;
-  zipCode: string;
+  zipCode?: string;
+  postalCode?: string;
   country: string;
 }
 
@@ -157,20 +162,39 @@ export interface OrderItem {
   id: string;
   orderId: string;
   productId: string;
-  product: Product;
-  quantity: number;
-  price: number;
+  product?: Product;
   variantId?: string;
+  variant?: ProductVariant;
+  productName: string;
+  variantName?: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  price: number;
 }
+
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+export type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 export interface Order {
   id: string;
+  orderNumber: string;
   userId: string;
-  status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-  total: number;
+  user?: User;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  paymentMethod: string;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  shippingAmount: number;
+  totalAmount: number;
+  couponCode?: string;
   shippingAddress: ShippingAddress;
+  billingAddress?: ShippingAddress;
   items: OrderItem[];
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Review {

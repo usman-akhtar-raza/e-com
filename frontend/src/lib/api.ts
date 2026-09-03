@@ -141,9 +141,15 @@ export const api = {
     delete: (id: string) => client.delete<void>(`/coupons/${id}`),
   },
   orders: {
-    create: (shippingAddress: any) => client.post<Order>('/orders', { shippingAddress }),
-    getAll: () => client.get<Order[]>('/orders'),
+    create: (body: { shippingAddress: any; billingAddress?: any; couponCode?: string; paymentMethod?: string }) => client.post<Order>('/orders', body),
+    getAll: (params?: any) => client.get<Order[]>('/orders', params),
     getById: (id: string) => client.get<Order>(`/orders/${id}`),
+    cancel: (id: string) => client.patch<Order>(`/orders/${id}/cancel`, {}),
+    updateStatus: (id: string, status: string) => client.patch<Order>(`/orders/${id}/status`, { status }),
+  },
+  payments: {
+    process: (orderId: string, amount: number, paymentMethod = 'MOCK') => client.post<{ success: boolean; transactionId: string; order: Order }>('/payments/process', { orderId, amount, paymentMethod }),
+    refund: (orderId: string) => client.post<{ success: boolean; order: Order }>(`/payments/refund/${orderId}`, {}),
   },
   reviews: {
     getByProduct: (productId: string) => client.get<Review[]>(`/products/${productId}/reviews`),

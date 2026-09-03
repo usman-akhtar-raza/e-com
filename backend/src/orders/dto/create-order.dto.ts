@@ -1,11 +1,22 @@
-import { IsObject, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString, IsObject } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateOrderDto {
-  @ApiProperty({
-    example: { street: '123 Main St', city: 'NY', state: 'NY', zipCode: '10001', country: 'USA' }
-  })
-  @IsObject()
+  @ApiProperty({ description: 'Shipping address object or ID' })
   @IsNotEmpty()
-  shippingAddress: Record<string, any>;
+  shippingAddress: any;
+
+  @ApiPropertyOptional({ description: 'Billing address object or ID' })
+  @IsOptional()
+  billingAddress?: any;
+
+  @ApiPropertyOptional({ description: 'Optional coupon code for discount' })
+  @IsOptional()
+  @IsString()
+  couponCode?: string;
+
+  @ApiPropertyOptional({ description: 'Payment method, e.g. MOCK, STRIPE, COD', default: 'MOCK' })
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string = 'MOCK';
 }
