@@ -1,4 +1,4 @@
-import { ApiResponse, PaginatedResponse, Product, Category, Brand, Cart, Order, Review, User, WishlistItem, Address, Coupon, CouponValidationResult } from './types';
+import { ApiResponse, PaginatedResponse, Product, Category, Brand, Cart, Order, Review, ReviewSummary, User, WishlistItem, Address, Coupon, CouponValidationResult } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
 
@@ -152,7 +152,12 @@ export const api = {
     refund: (orderId: string) => client.post<{ success: boolean; order: Order }>(`/payments/refund/${orderId}`, {}),
   },
   reviews: {
-    getByProduct: (productId: string) => client.get<Review[]>(`/products/${productId}/reviews`),
-    create: (body: any) => client.post<Review>('/reviews', body),
+    getByProduct: (productId: string, params?: any) => client.get<PaginatedResponse<Review>>(`/products/${productId}/reviews`, params),
+    getSummary: (productId: string) => client.get<ReviewSummary>(`/reviews/product/${productId}/summary`),
+    create: (body: { productId: string; rating: number; title?: string; comment: string }) => client.post<Review>('/reviews', body),
+    update: (id: string, body: { rating?: number; title?: string; comment?: string }) => client.patch<Review>(`/reviews/${id}`, body),
+    delete: (id: string) => client.delete<void>(`/reviews/${id}`),
+    getAll: (params?: any) => client.get<PaginatedResponse<Review>>('/reviews', params),
+    updateStatus: (id: string, status: string) => client.patch<Review>(`/reviews/${id}/status`, { status }),
   }
 };

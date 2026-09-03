@@ -9,10 +9,12 @@ import { ProductVariant } from '../products/entities/product-variant.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import { Address } from '../addresses/entities/address.entity';
 import { Coupon } from '../coupons/entities/coupon.entity';
+import { Review } from '../reviews/entities/review.entity';
 import { Role } from '../common/enums/role.enum';
 import { ProductStatus } from '../common/enums/product-status.enum';
 import { DiscountType } from '../common/enums/discount-type.enum';
 import { AddressType } from '../common/enums/address-type.enum';
+import { ReviewStatus } from '../common/enums/review-status.enum';
 
 dotenv.config();
 
@@ -23,7 +25,7 @@ const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'ecom',
-  entities: [User, Category, Brand, Product, ProductVariant, Inventory, Address, Coupon, __dirname + '/../**/*.entity{.ts,.js}'],
+  entities: [User, Category, Brand, Product, ProductVariant, Inventory, Address, Coupon, Review, __dirname + '/../**/*.entity{.ts,.js}'],
   synchronize: true,
 });
 
@@ -44,6 +46,7 @@ async function runSeed() {
     const inventoryRepo = queryRunner.manager.getRepository(Inventory);
     const addressRepo = queryRunner.manager.getRepository(Address);
     const couponRepo = queryRunner.manager.getRepository(Coupon);
+    const reviewRepo = queryRunner.manager.getRepository(Review);
 
     // 1. Admin & Customer Users
     const adminEmail = 'admin@example.com';
@@ -179,12 +182,14 @@ async function runSeed() {
       { name: 'Tennis Racket', slug: 'tennis-racket', price: 89.99, stock: 25, sku: 'TNR-001', description: 'Professional carbon fiber tennis racket', categoryId: savedCategories[4].id, brandId: savedBrands[4].id, status: ProductStatus.ACTIVE },
     ];
 
+    const savedProducts: Product[] = [];
     for (const prodData of productsData) {
       let prod = await productRepo.findOne({ where: { slug: prodData.slug } });
       if (!prod) {
         prod = productRepo.create(prodData);
         await productRepo.save(prod);
       }
+      savedProducts.push(prod);
 
       let inv = await inventoryRepo.findOne({ where: { productId: prod.id } });
       if (!inv) {
@@ -199,6 +204,24 @@ async function runSeed() {
       }
     }
     console.log('Products & Inventory seeded');
+
+    // 7. Seed Sample Reviews
+    if (customer && savedProducts.length > 0) {
+      let rev = await reviewRepo.findOne({ where: { userId: customer.id, productId: savedProducts[0].id } });
+      if (!rev) {
+        rev = reviewRepo.create({
+          userId: customer.id,
+          productId: savedProducts[0].id,
+          rating: 5,
+          title: 'Amazing smartphone!',
+          comment: 'Outstanding performance, crystal clear OLED screen, and battery lasts all day.',
+          isVerifiedPurchase: true,
+          status: ReviewStatus.APPROVED,
+        });
+        await reviewRepo.save(rev);
+        console.log('Sample review seeded');
+      }
+    }
 
     await queryRunner.commitTransaction();
     console.log('Seeding completed successfully!');

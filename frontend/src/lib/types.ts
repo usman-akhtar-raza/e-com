@@ -197,14 +197,32 @@ export interface Order {
   updatedAt: string;
 }
 
+export type ReviewStatus = 'APPROVED' | 'PENDING' | 'REJECTED';
+
 export interface Review {
   id: string;
   productId: string;
   userId: string;
   user: User;
   rating: number;
+  title?: string;
   comment: string;
+  isVerifiedPurchase: boolean;
+  status: ReviewStatus;
   createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ReviewSummary {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
 }
 
 export interface PaginatedResponse<T> {
