@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -11,9 +10,45 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
-  description: string;
-  imageUrl?: string;
+  description?: string;
+  image?: string;
+  parentId?: string;
+  isActive?: boolean;
   productCount?: number;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  logo?: string;
+  isActive?: boolean;
+}
+
+export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  sku: string;
+  name: string;
+  price?: number;
+  compareAtPrice?: number;
+  attributes?: Record<string, any>;
+  stock: number;
+  reservedStock: number;
+  lowStockThreshold: number;
+  isActive: boolean;
+}
+
+export interface ProductImage {
+  id: string;
+  productId: string;
+  url: string;
+  altText?: string;
+  sortOrder: number;
+  isPrimary: boolean;
 }
 
 export interface Product {
@@ -21,14 +56,21 @@ export interface Product {
   name: string;
   slug: string;
   description: string;
+  shortDescription?: string;
   price: number;
   compareAtPrice?: number;
-  sku: string;
+  costPrice?: number;
+  sku?: string;
   stock: number;
+  status?: ProductStatus;
   isActive: boolean;
   categoryId: string;
   category?: Category;
-  images: string[];
+  brandId?: string;
+  brand?: Brand;
+  images?: string[];
+  productImages?: ProductImage[];
+  variants?: ProductVariant[];
   createdAt: string;
   updatedAt: string;
   averageRating?: number;
@@ -39,6 +81,8 @@ export interface CartItem {
   productId: string;
   product: Product;
   quantity: number;
+  variantId?: string;
+  variant?: ProductVariant;
 }
 
 export interface Cart {
@@ -64,6 +108,7 @@ export interface OrderItem {
   product: Product;
   quantity: number;
   price: number;
+  variantId?: string;
 }
 
 export interface Order {

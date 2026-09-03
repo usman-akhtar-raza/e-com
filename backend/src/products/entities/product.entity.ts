@@ -1,6 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
+import { Brand } from '../../brands/entities/brand.entity';
+import { ProductVariant } from './product-variant.entity';
+import { ProductImage } from './product-image.entity';
 import { Review } from '../../reviews/entities/review.entity';
+import { ProductStatus } from '../../common/enums/product-status.enum';
 
 @Entity('products')
 export class Product {
@@ -16,20 +20,36 @@ export class Product {
   @Column({ type: 'text' })
   description: string;
 
+  @Column({ type: 'text', nullable: true })
+  shortDescription?: string;
+
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  compareAtPrice: number;
+  compareAtPrice?: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  costPrice?: number;
 
   @Column({ nullable: true })
-  sku: string;
+  sku?: string;
 
   @Column({ type: 'int', default: 0 })
   stock: number;
 
+  @Column({ type: 'enum', enum: ProductStatus, default: ProductStatus.ACTIVE })
+  status: ProductStatus;
+
   @Column({ type: 'simple-array', nullable: true })
-  images: string[];
+  images?: string[];
+
+  @Column({ nullable: true })
+  brandId?: string;
+
+  @ManyToOne(() => Brand, brand => brand.products, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'brandId' })
+  brand?: Brand;
 
   @Column()
   categoryId: string;
@@ -37,6 +57,12 @@ export class Product {
   @ManyToOne(() => Category, category => category.products)
   @JoinColumn({ name: 'categoryId' })
   category: Category;
+
+  @OneToMany(() => ProductVariant, variant => variant.product, { cascade: true })
+  variants: ProductVariant[];
+
+  @OneToMany(() => ProductImage, image => image.product, { cascade: true })
+  productImages: ProductImage[];
 
   @OneToMany(() => Review, review => review.product)
   reviews: Review[];
