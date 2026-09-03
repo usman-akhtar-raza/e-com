@@ -38,4 +38,13 @@ export class AuthController {
   getProfile(@CurrentUser() user: User) {
     return user;
   }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout current user' })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  logout() {
+    return { message: 'Logged out successfully' };
+  }
 }
