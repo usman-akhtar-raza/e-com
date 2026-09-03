@@ -3,8 +3,12 @@ import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
 import { User } from '../users/entities/user.entity';
 import { Category } from '../categories/entities/category.entity';
+import { Brand } from '../brands/entities/brand.entity';
 import { Product } from '../products/entities/product.entity';
+import { ProductVariant } from '../products/entities/product-variant.entity';
+import { Inventory } from '../inventory/entities/inventory.entity';
 import { Role } from '../common/enums/role.enum';
+import { ProductStatus } from '../common/enums/product-status.enum';
 
 dotenv.config();
 
@@ -15,8 +19,8 @@ const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'ecom',
-  entities: [User, Category, Product, __dirname + '/../**/*.entity{.ts,.js}'],
-  synchronize: true, // Will sync DB
+  entities: [User, Category, Brand, Product, ProductVariant, Inventory, __dirname + '/../**/*.entity{.ts,.js}'],
+  synchronize: true,
 });
 
 async function runSeed() {
@@ -31,7 +35,10 @@ async function runSeed() {
   try {
     const userRepo = queryRunner.manager.getRepository(User);
     const categoryRepo = queryRunner.manager.getRepository(Category);
+    const brandRepo = queryRunner.manager.getRepository(Brand);
     const productRepo = queryRunner.manager.getRepository(Product);
+    const variantRepo = queryRunner.manager.getRepository(ProductVariant);
+    const inventoryRepo = queryRunner.manager.getRepository(Inventory);
 
     // 1. Admin & Customer Users
     const adminEmail = 'admin@example.com';
@@ -42,7 +49,7 @@ async function runSeed() {
         password: await bcrypt.hash('admin123', 10),
         firstName: 'Admin',
         lastName: 'User',
-        role: Role.ADMIN
+        role: Role.ADMIN,
       });
       await userRepo.save(admin);
       console.log('Admin user created');
@@ -56,7 +63,7 @@ async function runSeed() {
         password: await bcrypt.hash('customer123', 10),
         firstName: 'Customer',
         lastName: 'User',
-        role: Role.CUSTOMER
+        role: Role.CUSTOMER,
       });
       await userRepo.save(customer);
       console.log('Customer user created');
@@ -68,7 +75,7 @@ async function runSeed() {
       { name: 'Clothing', slug: 'clothing' },
       { name: 'Books', slug: 'books' },
       { name: 'Home & Garden', slug: 'home-garden' },
-      { name: 'Sports', slug: 'sports' }
+      { name: 'Sports', slug: 'sports' },
     ];
 
     const savedCategories: Category[] = [];
@@ -82,18 +89,38 @@ async function runSeed() {
     }
     console.log('Categories seeded');
 
-    // 3. Products
+    // 3. Brands
+    const brandsData = [
+      { name: 'Apple', slug: 'apple', description: 'Innovative tech brand' },
+      { name: 'Nike', slug: 'nike', description: 'Athletic footwear & apparel' },
+      { name: 'Penguin', slug: 'penguin', description: 'Renowned book publisher' },
+      { name: 'IKEA', slug: 'ikea', description: 'Home furnishings' },
+      { name: 'Wilson', slug: 'wilson', description: 'Sports equipment brand' },
+    ];
+
+    const savedBrands: Brand[] = [];
+    for (const bData of brandsData) {
+      let brand = await brandRepo.findOne({ where: { slug: bData.slug } });
+      if (!brand) {
+        brand = brandRepo.create(bData);
+        await brandRepo.save(brand);
+      }
+      savedBrands.push(brand);
+    }
+    console.log('Brands seeded');
+
+    // 4. Products
     const productsData = [
-      { name: 'Smartphone X', slug: 'smartphone-x', price: 999.99, stock: 50, description: 'Latest smartphone', categoryId: savedCategories[0].id },
-      { name: 'Laptop Pro', slug: 'laptop-pro', price: 1499.99, stock: 30, description: 'High performance laptop', categoryId: savedCategories[0].id },
-      { name: 'Cotton T-Shirt', slug: 'cotton-tshirt', price: 19.99, stock: 100, description: 'Comfortable cotton t-shirt', categoryId: savedCategories[1].id },
-      { name: 'Jeans Classic', slug: 'jeans-classic', price: 49.99, stock: 80, description: 'Classic blue jeans', categoryId: savedCategories[1].id },
-      { name: 'Sci-Fi Novel', slug: 'scifi-novel', price: 14.99, stock: 200, description: 'Bestselling sci-fi novel', categoryId: savedCategories[2].id },
-      { name: 'Cookbook', slug: 'cookbook', price: 24.99, stock: 150, description: '100 easy recipes', categoryId: savedCategories[2].id },
-      { name: 'Garden Hose', slug: 'garden-hose', price: 34.99, stock: 60, description: 'Durable garden hose 50ft', categoryId: savedCategories[3].id },
-      { name: 'Coffee Maker', slug: 'coffee-maker', price: 79.99, stock: 40, description: 'Programmable coffee maker', categoryId: savedCategories[3].id },
-      { name: 'Yoga Mat', slug: 'yoga-mat', price: 29.99, stock: 120, description: 'Non-slip yoga mat', categoryId: savedCategories[4].id },
-      { name: 'Tennis Racket', slug: 'tennis-racket', price: 89.99, stock: 25, description: 'Professional tennis racket', categoryId: savedCategories[4].id }
+      { name: 'Smartphone X', slug: 'smartphone-x', price: 999.99, stock: 50, sku: 'SPX-001', description: 'Latest smartphone with OLED display', categoryId: savedCategories[0].id, brandId: savedBrands[0].id, status: ProductStatus.ACTIVE },
+      { name: 'Laptop Pro', slug: 'laptop-pro', price: 1499.99, stock: 30, sku: 'LTP-001', description: 'High performance laptop with M-series chip', categoryId: savedCategories[0].id, brandId: savedBrands[0].id, status: ProductStatus.ACTIVE },
+      { name: 'Cotton T-Shirt', slug: 'cotton-tshirt', price: 19.99, stock: 100, sku: 'CTS-001', description: 'Comfortable 100% cotton t-shirt', categoryId: savedCategories[1].id, brandId: savedBrands[1].id, status: ProductStatus.ACTIVE },
+      { name: 'Jeans Classic', slug: 'jeans-classic', price: 49.99, stock: 80, sku: 'JNC-001', description: 'Classic blue denim jeans', categoryId: savedCategories[1].id, brandId: savedBrands[1].id, status: ProductStatus.ACTIVE },
+      { name: 'Sci-Fi Novel', slug: 'scifi-novel', price: 14.99, stock: 200, sku: 'SFN-001', description: 'Bestselling sci-fi space opera novel', categoryId: savedCategories[2].id, brandId: savedBrands[2].id, status: ProductStatus.ACTIVE },
+      { name: 'Cookbook', slug: 'cookbook', price: 24.99, stock: 150, sku: 'CKB-001', description: '100 easy recipes for everyday cooking', categoryId: savedCategories[2].id, brandId: savedBrands[2].id, status: ProductStatus.ACTIVE },
+      { name: 'Garden Hose', slug: 'garden-hose', price: 34.99, stock: 60, sku: 'GDH-001', description: 'Durable garden hose 50ft', categoryId: savedCategories[3].id, brandId: savedBrands[3].id, status: ProductStatus.ACTIVE },
+      { name: 'Coffee Maker', slug: 'coffee-maker', price: 79.99, stock: 40, sku: 'CFM-001', description: 'Programmable drip coffee maker', categoryId: savedCategories[3].id, brandId: savedBrands[3].id, status: ProductStatus.ACTIVE },
+      { name: 'Yoga Mat', slug: 'yoga-mat', price: 29.99, stock: 120, sku: 'YGM-001', description: 'Non-slip eco-friendly yoga mat', categoryId: savedCategories[4].id, brandId: savedBrands[4].id, status: ProductStatus.ACTIVE },
+      { name: 'Tennis Racket', slug: 'tennis-racket', price: 89.99, stock: 25, sku: 'TNR-001', description: 'Professional carbon fiber tennis racket', categoryId: savedCategories[4].id, brandId: savedBrands[4].id, status: ProductStatus.ACTIVE },
     ];
 
     for (const prodData of productsData) {
@@ -102,8 +129,21 @@ async function runSeed() {
         prod = productRepo.create(prodData);
         await productRepo.save(prod);
       }
+
+      // Seed Inventory record for each product
+      let inv = await inventoryRepo.findOne({ where: { productId: prod.id } });
+      if (!inv) {
+        inv = inventoryRepo.create({
+          productId: prod.id,
+          sku: prodData.sku,
+          quantity: prodData.stock,
+          reservedQuantity: 0,
+          lowStockThreshold: 5,
+        });
+        await inventoryRepo.save(inv);
+      }
     }
-    console.log('Products seeded');
+    console.log('Products & Inventory seeded');
 
     await queryRunner.commitTransaction();
     console.log('Seeding completed successfully!');

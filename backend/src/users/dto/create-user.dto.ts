@@ -22,7 +22,7 @@ export class CreateUserDto {
   @IsString()
   lastName?: string;
 
-  @ApiPropertyOptional({ enum: Role, default: Role.USER })
+  @ApiPropertyOptional({ enum: Role, default: Role.CUSTOMER })
   @IsOptional()
   @IsEnum(Role)
   role?: Role;

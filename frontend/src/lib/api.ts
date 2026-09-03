@@ -1,5 +1,4 @@
-
-import { ApiResponse, PaginatedResponse, Product, Category, Cart, Order, Review, User } from './types';
+import { ApiResponse, PaginatedResponse, Product, Category, Brand, Cart, Order, Review, User } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -93,12 +92,24 @@ export const api = {
   },
   products: {
     getAll: (params?: any) => client.get<PaginatedResponse<Product>>('/products', params),
-    getBySlug: (slug: string) => client.get<Product>(`/products/${slug}`),
+    getById: (id: string) => client.get<Product>(`/products/${id}`),
+    getBySlug: (slug: string) => client.get<Product>(`/products/slug/${slug}`),
     create: (body: any) => client.post<Product>('/products', body),
+    update: (id: string, body: any) => client.patch<Product>(`/products/${id}`, body),
+    delete: (id: string) => client.delete<any>(`/products/${id}`),
   },
   categories: {
     getAll: () => client.get<Category[]>('/categories'),
     getById: (id: string) => client.get<Category>(`/categories/${id}`),
+    getBySlug: (slug: string) => client.get<Category>(`/categories/slug/${slug}`),
+  },
+  brands: {
+    getAll: (params?: any) => client.get<Brand[]>('/brands', params),
+    getById: (id: string) => client.get<Brand>(`/brands/${id}`),
+    getBySlug: (slug: string) => client.get<Brand>(`/brands/slug/${slug}`),
+    create: (body: any) => client.post<Brand>('/brands', body),
+    update: (id: string, body: any) => client.patch<Brand>(`/brands/${id}`, body),
+    delete: (id: string) => client.delete<any>(`/brands/${id}`),
   },
   cart: {
     get: () => client.get<Cart>('/cart'),
