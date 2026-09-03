@@ -1,4 +1,4 @@
-import { ApiResponse, PaginatedResponse, Product, Category, Brand, Cart, Order, Review, ReviewSummary, User, WishlistItem, Address, Coupon, CouponValidationResult } from './types';
+import { ApiResponse, PaginatedResponse, Product, Category, Brand, Cart, Order, Review, ReviewSummary, User, WishlistItem, Address, Coupon, CouponValidationResult, DashboardKPIs, SalesAnalyticsPoint, TopProductPerformance, LowStockAlertItem } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
 
@@ -151,6 +151,10 @@ export const api = {
     process: (orderId: string, amount: number, paymentMethod = 'MOCK') => client.post<{ success: boolean; transactionId: string; order: Order }>('/payments/process', { orderId, amount, paymentMethod }),
     refund: (orderId: string) => client.post<{ success: boolean; order: Order }>(`/payments/refund/${orderId}`, {}),
   },
+  inventory: {
+    getByProduct: (productId: string, variantId?: string) => client.get<any>(`/inventory/product/${productId}`, { variantId }),
+    updateStock: (productId: string, quantity: number, lowStockThreshold?: number, variantId?: string) => client.patch<any>(`/inventory/product/${productId}${variantId ? '?variantId=' + variantId : ''}`, { quantity, lowStockThreshold }),
+  },
   reviews: {
     getByProduct: (productId: string, params?: any) => client.get<PaginatedResponse<Review>>(`/products/${productId}/reviews`, params),
     getSummary: (productId: string) => client.get<ReviewSummary>(`/reviews/product/${productId}/summary`),
@@ -159,5 +163,11 @@ export const api = {
     delete: (id: string) => client.delete<void>(`/reviews/${id}`),
     getAll: (params?: any) => client.get<PaginatedResponse<Review>>('/reviews', params),
     updateStatus: (id: string, status: string) => client.patch<Review>(`/reviews/${id}/status`, { status }),
+  },
+  admin: {
+    getKPIs: () => client.get<DashboardKPIs>('/admin/analytics/dashboard'),
+    getSales: (days = 30) => client.get<SalesAnalyticsPoint[]>('/admin/analytics/sales', { days }),
+    getTopProducts: (limit = 5) => client.get<TopProductPerformance[]>('/admin/analytics/top-products', { limit }),
+    getLowStock: () => client.get<LowStockAlertItem[]>('/admin/analytics/low-stock'),
   }
 };
